@@ -139,7 +139,7 @@ Hvis du senere ændrer webadressen, skal både `SITE_URL` og `allowedOrigins` ø
 - **Steder** (moderator og admin) og **Indhold** (admin): kategorier, målgrupper, områder, afvisningsårsager og ordliste kan rettes uden kode.
 - Opret kategorier under **Moderator → Indhold → Kategorier**. Skriv en kort unik kode (fx `film-og-teater`), navn, ikon og farve, og tryk **Tilføj**. Arrangører kan vælge flere kategorier ved indsendelse. Moderatorer og admins kan bagefter rette hovedkategori og ekstra kategorier; filtre og notifikationer bruger alle valgte kategorier.
 - Sted er valgfrit ved indsendelse. Moderatorer og admins kan tilføje eller ændre det senere via arrangementets redigering.
-- Sluttidspunkt er valgfrit. Markér **Sluttidspunkt ikke oplyst**, når det ikke kendes; datoen kan stadig udfyldes, hvis arrangementet varer flere dage.
+- Sluttidspunkt er valgfrit. Markér **Arrangementet har intet sluttidspunkt**, hvis arrangementet ikke har et fast sluttidspunkt; slutdatoen kan stadig udfyldes, hvis det varer flere dage.
 - Konfliktcheck i formularen advarer om samme sted/tid (rød), samtidige arrangementer (gul) og andet samme dag (blå).
 
 ### Rettelser fra arrangører (rettelink)
