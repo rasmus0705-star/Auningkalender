@@ -129,6 +129,7 @@ function bygLayout(app) {
     h('footer', { class: 'bund' },
       h('div', { class: 'bund-inde' },
         h('p', null, `${CONFIG.siteName} · ${CONFIG.omraadeTekst}`),
+        h('p', null, 'Siden er lavet og drives af ', h('strong', null, CONFIG.ansvarlig), '. Kontakt: ', h('a', { href: `mailto:${CONFIG.kontaktEmail}` }, CONFIG.kontaktEmail)),
         h('p', { class: 'bund-links' },
           h('a', { href: '#/om' }, 'Om'), h('a', { href: '#/regler' }, 'Retningslinjer'), h('a', { href: '#/privatliv' }, 'Privatliv'), h('a', { href: '#/ansvar' }, 'Ansvar'),
           S.demo ? null : h('a', { href: 'd/' }, 'Arrangementsliste'),

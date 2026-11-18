@@ -27,8 +27,8 @@ export const CONFIG = {
   defaultOmraade: 'auning',
 
   // --- Ansvarlig (bruges i privatlivstekst og ansvarsfraskrivelse) ---
-  ansvarlig: 'Navn på ansvarlig / forening',
-  kontaktEmail: 'kontakt@eksempel.dk',
+  ansvarlig: 'Rasmus Løth',
+  kontaktEmail: 'rasmus0705@gmail.com',
   facebookUrl: '',               // fx 'https://www.facebook.com/...' – vises i bunden
 
   // --- Udseende (hex) ---
