@@ -7,6 +7,11 @@ insert into kk_steder (navn, omraade, sortering)
 select v.navn, 'auning', 50 from (values ('3F Huset'), ('Apetit'), ('Auning Idræts- & Kulturcenter (AIK)'), ('Auning Kirke'), ('Auning Kro'), ('Det Gamle Hospital'), ('Det Grønne Museum'), ('Galleri Marxen'), ('Herregårdsmuseet (Gl. Estrup)'), ('Kulturperronen'), ('Madens Hus'), ('Nature by Hjort'), ('Nørgaard Teknik'), ('Sognehuset')) v(navn)
 where not exists (select 1 from kk_steder s where s.navn = v.navn);
 
+-- SQL Editor har ingen indlogget moderator. Slå derfor kun spam-triggeren fra
+-- under masse-INSERT'et; den slås til igen før godkendelsesopdateringen, som
+-- samtidig får triggeren til at beregne slut_eff for de importerede rækker.
+alter table kk_events disable trigger kk_events_foer;
+
 insert into kk_events (id, titel, beskrivelse, start_ts, slut_ts, sted_id, sted_navn, adresse, omraade, kategori, maalgruppe, pris_tekst, arrangoer)
 values
   ('a577d287-f7f8-554f-b66f-2272c18cf55d', 'Børneteater på Kulturperronen - Orla Frøsnapper', null, (timestamp '2026-11-14 10:00' at time zone 'Europe/Copenhagen'), null, (select id from kk_steder where navn = 'Kulturperronen' limit 1), null, null, 'auning', 'boern-familie', 'boern', null, 'Ikke oplyst'),
@@ -91,6 +96,8 @@ values
   ('b1f7a77e-a688-5bb4-8f07-c5ceb95fd38d', 'Julebal med lækker mad og fed musik', 'Tidspunkt: Offentliggøres.', (timestamp '2027-12-04 00:00' at time zone 'Europe/Copenhagen'), null, (select id from kk_steder where navn = 'Apetit' limit 1), null, null, 'auning', 'marked-fest', 'alle', null, 'Apetit'),
   ('924b4612-5096-5cf1-802e-ffe3a01104cb', 'Kyndelmissegudstjeneste Auning Kirke', 'Vi hilser den lyse tid velkommen med pandekager og vintersange.', (timestamp '2027-01-31 14:00' at time zone 'Europe/Copenhagen'), (timestamp '2027-01-31 15:00' at time zone 'Europe/Copenhagen'), (select id from kk_steder where navn = 'Auning Kirke' limit 1), null, 'Kirkevej 2, 8963 Auning', 'auning', 'andet', 'alle', null, 'Auning Kirke')
 on conflict (id) do nothing;
+
+alter table kk_events enable trigger kk_events_foer;
 
 -- Triggeren sætter nye rækker til "afventer"; her udgives de, og automatiske flag ryddes.
 update kk_events set status = 'godkendt', af_moderator = true, flag = '{}'
