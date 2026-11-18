@@ -3,7 +3,7 @@ import { CONFIG, DEMO } from './config.js';
 import { h, icon, clear, hvornaar, linkify, toast, hentIcsFil, googleKalenderUrl, decorate, delUrl } from './util.js';
 import { S, sikrData, kat, maalgruppeNavn, omraadeNavn, stedById, toggleFav, filtrer, hentRet } from './state.js';
 import { pushMulig, tilstand as pushTilstand, visPushDialog } from './push.js';
-import { media, katPille, skeletter, tomtState, eventKort } from './ui.js';
+import { media, katPiller, skeletter, tomtState, eventKort } from './ui.js';
 
 export async function visEvent(root, id) {
   root.append(skeletter(2));
@@ -66,7 +66,7 @@ export async function visEvent(root, id) {
     h('article', { class: 'event', style: `--c:${k.farve}` },
       h('div', { class: 'event-hero' }, media(ev, 'event-media'), aflyst ? h('div', { class: 'aflyst-stor' }, 'AFLYST') : null),
       venter ? h('div', { class: 'banner', role: 'status' }, icon('eye', 16), ev.status === 'afventer' ? 'Dette arrangement afventer godkendelse og er ikke offentligt endnu.' : `Status: ${ev.status}`) : null,
-      h('header', { class: 'event-hoved' }, katPille(ev.kategori), h('h1', null, ev.titel), ev.arrangoer ? h('p', { class: 'arrangoer' }, 'Arrangør: ', h('b', null, ev.arrangoer)) : null),
+      h('header', { class: 'event-hoved' }, h('div', { class: 'kort-meta' }, katPiller(ev)), h('h1', null, ev.titel), ev.arrangoer ? h('p', { class: 'arrangoer' }, 'Arrangør: ', h('b', null, ev.arrangoer)) : null),
       h('div', { class: 'event-knapper' }, favB, kalender, del, hentRet(ev.id) ? h('a', { class: 'knap sekundær', href: `#/rettelse/${hentRet(ev.id)}` }, icon('edit', 18), ' Foreslå rettelse') : null, ev.link_url ? h('a', { class: 'knap primær', href: ev.link_url, target: '_blank', rel: 'noopener noreferrer nofollow' }, icon('ext', 18), ' Mere info / tilmelding') : null),
       pushTip,
       h('div', { class: 'event-krop' },
@@ -94,7 +94,7 @@ function kortElement(sted) {
 }
 
 function lignende(ev) {
-  const andre = filtrer(S.events, { ...S.filter, periode: 'alle', kat: new Set([ev.kategori]), maalgruppe: '', omraade: '', gratis: false, mine: false, q: '' })
+  const andre = filtrer(S.events, { ...S.filter, periode: 'alle', kat: new Set([ev.kategori, ...(ev.kategorier || [])]), maalgruppe: '', omraade: '', gratis: false, mine: false, q: '' })
     .filter((e) => e.id !== ev.id).slice(0, 3);
   if (!andre.length) return null;
   return h('section', { class: 'lignende' }, h('h2', null, `Mere inden for ${kat(ev.kategori).navn.toLowerCase()}`), h('div', { class: 'kort-grid' }, andre.map((e) => eventKort(e, { kompakt: true }))));

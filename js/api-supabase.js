@@ -10,8 +10,47 @@ export function createApi(C) {
   });
 
   const ok = ({ data, error }) => { if (error) throw error; return data; };
+  let kategoriTabelTilgaengelig = null;
   const url = (sti) => (sti ? sb.storage.from(BUCKET).getPublicUrl(sti).data.publicUrl : null);
   const med = (r) => ({ ...r, billede_url: url(r.billede_sti) });
+  const medKategorier = (r) => {
+    const relationer = r.kk_event_kategorier || [];
+    const { kk_event_kategorier, ...event } = r;
+    return med({ ...event, kategorier: [...new Set([event.kategori, ...relationer.map((x) => x.kategori)])] });
+  };
+  const gemEkstraKategorier = async (ids, primær, ekstra = []) => {
+    const slugs = [...new Set(ekstra)].filter((slug) => slug && slug !== primær);
+    if (!kategoriTabelTilgaengelig && slugs.length) throw new Error('Kør først sql/07_event_kategorier.sql i Supabase for at bruge ekstra kategorier.');
+    if (!kategoriTabelTilgaengelig) return;
+    for (const id of ids) {
+      ok(await sb.from('kk_event_kategorier').delete().eq('event_id', id));
+      if (slugs.length) ok(await sb.from('kk_event_kategorier').insert(slugs.map((kategori) => ({ event_id: id, kategori }))));
+    }
+  };
+  const kraevEkstraKategoriTabel = async (primær, kategorier = []) => {
+    const harEkstra = [...new Set(kategorier)].some((slug) => slug && slug !== primær);
+    if (!harEkstra || kategoriTabelTilgaengelig === true) return;
+    if (kategoriTabelTilgaengelig === null) {
+      const probe = await sb.from('kk_event_kategorier').select('event_id').limit(1);
+      kategoriTabelTilgaengelig = !probe.error;
+    }
+    if (!kategoriTabelTilgaengelig) throw new Error('Kør først sql/07_event_kategorier.sql i Supabase for at bruge ekstra kategorier.');
+  };
+  const hentKategoriserede = async (forespoerg, fallback) => {
+    const result = await forespoerg();
+    if (result.error) {
+      if (!/kk_event_kategorier|relationship/i.test(result.error.message || '')) throw result.error;
+      kategoriTabelTilgaengelig = false;
+      const data = ok(await fallback());
+      const rows = Array.isArray(data) ? data : data ? [data] : [];
+      const mapped = rows.map((r) => med({ ...r, kategorier: [r.kategori] }));
+      return Array.isArray(data) ? mapped : mapped[0] || null;
+    }
+    kategoriTabelTilgaengelig = true;
+    const rows = Array.isArray(result.data) ? result.data : result.data ? [result.data] : [];
+    const mapped = rows.map(medKategorier);
+    return Array.isArray(result.data) ? mapped : mapped[0] || null;
+  };
   const aarsstart = () => cphToISO(`${new Date().getFullYear()}-01-01`, '00:00');
 
   async function billedeIBrug(sti, undtagenId) {
@@ -58,13 +97,14 @@ export function createApi(C) {
       return { kategorier: ok(kategorier), maalgrupper: ok(maalgrupper), omraader: ok(omraader), steder: ok(steder) };
     },
     async hentEvents() {
-      const rows = ok(await sb.from('kk_events').select('*').in('status', ['godkendt', 'aflyst']).eq('skjult', false)
-        .gte('slut_eff', aarsstart()).order('start_ts').limit(1500));
-      return rows.map(med);
+      return hentKategoriserede(
+        () => sb.from('kk_events').select('*, kk_event_kategorier(kategori)').in('status', ['godkendt', 'aflyst']).eq('skjult', false).gte('slut_eff', aarsstart()).order('start_ts').limit(1500),
+        () => sb.from('kk_events').select('*').in('status', ['godkendt', 'aflyst']).eq('skjult', false).gte('slut_eff', aarsstart()).order('start_ts').limit(1500));
     },
     async hentEvent(id) {
-      const r = ok(await sb.from('kk_events').select('*').eq('id', id).maybeSingle());
-      return r ? med(r) : null;
+      return hentKategoriserede(
+        () => sb.from('kk_events').select('*, kk_event_kategorier(kategori)').eq('id', id).maybeSingle(),
+        () => sb.from('kk_events').select('*').eq('id', id).maybeSingle());
     },
     async konflikter(a) {
       return ok(await sb.rpc('kk_konflikter', {
@@ -80,7 +120,12 @@ export function createApi(C) {
       if (r.error) throw r.error;
       return sti;
     },
-    async opret(event, kontakt) { return ok(await sb.rpc('kk_opret', { p: event, p_kontakt: kontakt || null })); },
+    async opret(event, kontakt) {
+      await kraevEkstraKategoriTabel(event.kategori, event.kategorier || []);
+      const ids = ok(await sb.rpc('kk_opret', { p: event, p_kontakt: kontakt || null }));
+      if (event.kategorier?.length > 1) await gemEkstraKategorier(ids, event.kategori, event.kategorier);
+      return ids;
+    },
 
     // ---------- rettelink (forslag til ændringer) ----------
     async rettelink(eventId) { return ok(await sb.rpc('kk_rettelink', { p_event: eventId })); },
@@ -99,16 +144,26 @@ export function createApi(C) {
 
     // ---------- moderator ----------
     async hentModEvents() {
-      const rows = ok(await sb.from('kk_events').select('*, kk_kontakt(*)').order('start_ts').limit(3000));
-      return rows.map((r) => { const k = Array.isArray(r.kk_kontakt) ? r.kk_kontakt[0] : r.kk_kontakt; const { kk_kontakt, ...rest } = r; return med({ ...rest, kontakt: k || null }); });
+      const rows = await hentKategoriserede(
+        () => sb.from('kk_events').select('*, kk_kontakt(*), kk_event_kategorier(kategori)').order('start_ts').limit(3000),
+        () => sb.from('kk_events').select('*, kk_kontakt(*)').order('start_ts').limit(3000));
+      return rows.map((r) => { const k = Array.isArray(r.kk_kontakt) ? r.kk_kontakt[0] : r.kk_kontakt; const { kk_kontakt, ...rest } = r; return { ...rest, kontakt: k || null }; });
     },
     async hentModEvent(id) {
-      const r = ok(await sb.from('kk_events').select('*, kk_kontakt(*)').eq('id', id).maybeSingle());
+      const r = await hentKategoriserede(
+        () => sb.from('kk_events').select('*, kk_kontakt(*), kk_event_kategorier(kategori)').eq('id', id).maybeSingle(),
+        () => sb.from('kk_events').select('*, kk_kontakt(*)').eq('id', id).maybeSingle());
       if (!r) return null;
-      const k = Array.isArray(r.kk_kontakt) ? r.kk_kontakt[0] : r.kk_kontakt; const { kk_kontakt, ...rest } = r;
-      return med({ ...rest, kontakt: k || null });
+      const k = Array.isArray(r.kk_kontakt) ? r.kk_kontakt[0] : r.kk_kontakt;
+      const { kk_kontakt, ...rest } = r;
+      return { ...rest, kontakt: k || null };
     },
-    async opdaterEvent(id, patch) { ok(await sb.from('kk_events').update(patch).eq('id', id)); },
+    async opdaterEvent(id, patch) {
+      const { kategorier, ...eventPatch } = patch;
+      if (kategorier) await kraevEkstraKategoriTabel(eventPatch.kategori, kategorier);
+      ok(await sb.from('kk_events').update(eventPatch).eq('id', id));
+      if (kategorier) await gemEkstraKategorier([id], eventPatch.kategori, kategorier);
+    },
     async gemKontakt(id, k) {
       if (!k || !k.navn || (!k.email && !k.telefon)) return;
       ok(await sb.from('kk_kontakt').upsert({ event_id: id, navn: k.navn, email: k.email || null, telefon: k.telefon || null }));

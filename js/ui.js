@@ -16,6 +16,10 @@ export function katPille(slug) {
   return h('span', { class: 'pille', style: `--c:${k.farve}` }, h('span', { 'aria-hidden': 'true' }, k.ikon), ' ', k.navn);
 }
 
+export function katPiller(ev) {
+  return [...new Set([ev.kategori, ...(ev.kategorier || [])])].filter(Boolean).map(katPille);
+}
+
 export function prisTekst(ev) {
   const p = (ev.pris_tekst || '').trim();
   return p || null;
@@ -43,7 +47,7 @@ export function eventKort(ev, { kompakt = false } = {}) {
       h('span', { class: 'datobadge' }, h('b', null, fmt.dagNr(ev._start)), h('i', null, fmt.maanedKort(ev._start))),
       aflyst ? h('span', { class: 'aflyst-bånd' }, 'AFLYST') : null),
     h('div', { class: 'kort-krop' },
-      h('div', { class: 'kort-meta' }, katPille(ev.kategori), pris ? h('span', { class: 'pris' }, pris) : null),
+      h('div', { class: 'kort-meta' }, katPiller(ev), pris ? h('span', { class: 'pris' }, pris) : null),
       h('h3', null, h('a', { class: 'kort-link', href: `#/event/${ev.id}` }, ev.titel)),
       h('p', { class: 'kort-linje' }, icon('clock', 15), kortTid(ev)),
       sted ? h('p', { class: 'kort-linje' }, icon('pin', 15), sted) : null),

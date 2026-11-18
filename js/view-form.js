@@ -37,6 +37,9 @@ export async function visForm(root, { id, kopi, token } = {}) {
   const katRadios = h('div', { class: 'kat-valg', role: 'radiogroup', 'aria-label': 'Kategori' },
     S.stam.kategorier.map((k) => h('label', { class: 'kat-radio', style: `--c:${k.farve}` },
       h('input', { type: 'radio', name: 'kategori', value: k.slug, checked: e0.kategori === k.slug, onchange: konfliktCheck }), h('span', null, k.ikon, ' ', k.navn))));
+  const ekstraKatValg = mod ? h('div', { class: 'kat-valg', role: 'group', 'aria-label': 'Ekstra kategorier' },
+    S.stam.kategorier.map((k) => h('label', { class: 'kat-radio', style: `--c:${k.farve}` },
+      h('input', { type: 'checkbox', name: 'ekstra_kategorier', value: k.slug, checked: (e0.kategorier || []).includes(k.slug) && e0.kategori !== k.slug }), h('span', null, k.ikon, ' ', k.navn)))) : null;
   const beskr = h('textarea', { id: 'f-beskrivelse', name: 'beskrivelse', rows: 5, maxlength: 4000, placeholder: 'Hvad skal der ske? Hvem er det for? Skal man tilmelde sig?' }, e0.beskrivelse || '');
   const billedeInput = inp('billede', 'file', { accept: 'image/*' });
   const preview = h('div', { class: 'preview' });
@@ -97,7 +100,9 @@ export async function visForm(root, { id, kopi, token } = {}) {
   form.append(
     sektion(1, 'Hvad skal der ske?',
       felt('Titel', inp('titel', 'text', { id: 'f-titel', value: e0.titel || '', maxlength: 120, placeholder: 'Fx "Koncert med Auning Musikforening"', oninput: null }), { navn: 'titel', krav: true }),
-      h('div', { class: 'felt', dataset: { felt: 'kategori' } }, h('label', null, 'Kategori', h('span', { class: 'krav' }, ' *')), katRadios, h('div', { class: 'fejl', id: 'fejl-kategori', role: 'alert' })),
+      h('div', { class: 'felt', dataset: { felt: 'kategori' } }, h('label', null, 'Hovedkategori', h('span', { class: 'krav' }, ' *')), katRadios,
+        ekstraKatValg ? h('div', { class: 'felt' }, h('label', null, 'Ekstra kategorier (valgfrit)'), ekstraKatValg) : null,
+        h('div', { class: 'fejl', id: 'fejl-kategori', role: 'alert' })),
       felt('Beskrivelse', beskr, { navn: 'beskrivelse', hint: 'Skriv gerne hvem det er for, om der er tilmelding, og hvad man skal medbringe.' }),
       ...(ret ? [] : [felt('Billede', billedeInput, { navn: 'billede', hint: 'Valgfrit. Brug gerne et liggende billede. Det formindskes automatisk.' }), preview])),
     sektion(2, 'Hvornår?',
@@ -284,7 +289,9 @@ export async function visForm(root, { id, kopi, token } = {}) {
       const kontakt = { navn: g('kontaktnavn'), email: g('email'), telefon: g('telefon') };
       const prisVal = gratisChk.checked ? 'Gratis' : g('pris');
       const fælles = {
-        titel: g('titel'), beskrivelse: g('beskrivelse'), kategori: g('kategori'), maalgruppe: g('maalgruppe'), omraade: g('omraade') || null,
+        titel: g('titel'), beskrivelse: g('beskrivelse'), kategori: g('kategori'),
+        kategorier: [...new Set([g('kategori'), ...[...form.querySelectorAll('input[name="ekstra_kategorier"]:checked')].map((x) => x.value)])],
+        maalgruppe: g('maalgruppe'), omraade: g('omraade') || null,
         ...sted, pris_tekst: prisVal || null, link_url: link || null, arrangoer: g('arrangoer'),
       };
       const fil = billedeInput.files[0];

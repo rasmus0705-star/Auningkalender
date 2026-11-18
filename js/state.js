@@ -97,7 +97,7 @@ export function filtrer(events, f = S.filter, nu = new Date(), historik = false)
       if (e._slutDag < fra || e._startDag > til) return false;
       if (e._slutEff < nu) return false;
     }
-    if (f.kat.size && !f.kat.has(e.kategori)) return false;
+    if (f.kat.size && ![e.kategori, ...(e.kategorier || [])].some((k) => f.kat.has(k))) return false;
     if (f.maalgruppe && e.maalgruppe !== f.maalgruppe && e.maalgruppe !== 'alle') return false;
     if (f.omraade && e.omraade !== f.omraade) return false;
     if (f.gratis && !/^(gratis|fri|0)/i.test(e.pris_tekst || 'gratis')) return false;

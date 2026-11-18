@@ -2,7 +2,7 @@
 import { CONFIG } from './config.js';
 import { h, icon, clear, hvornaar, kortTid, decorate, toast, dialog, bekraeft, captcha, fmt, dayKey, tidTekst } from './util.js';
 import { S, kat, opdaterRolle, indlaesStamdata, maalgruppeNavn, omraadeNavn, rettelinkUrl } from './state.js';
-import { skeletter, tomtState, katPille, media } from './ui.js';
+import { skeletter, tomtState, katPiller, media } from './ui.js';
 
 // =========================== LOGIN ===========================
 export async function visMod(root) {
@@ -199,7 +199,7 @@ async function visDashboard(root) {
     return h('article', { class: `mod-række s-${st}${e.skjult ? ' skjult' : ''}`, style: `--c:${kat(e.kategori).farve}` },
       h('div', { class: 'mr-media' }, media(e)),
       h('div', { class: 'mr-krop' },
-        h('div', { class: 'mr-top' }, h('span', { class: `status-badge ${st}` }, st), e.skjult ? h('span', { class: 'status-badge skjult' }, 'skjult') : null, katPille(e.kategori), e.serie_id ? h('span', { class: 'mini-tag' }, 'serie') : null,
+        h('div', { class: 'mr-top' }, h('span', { class: `status-badge ${st}` }, st), e.skjult ? h('span', { class: 'status-badge skjult' }, 'skjult') : null, katPiller(e), e.serie_id ? h('span', { class: 'mini-tag' }, 'serie') : null,
           ...(e.flag || []).map((f) => h('span', { class: 'flag' }, icon('alert', 13), f))),
         h('h3', null, h('a', { href: `#/event/${e.id}` }, e.titel)),
         h('p', { class: 'mr-linje' }, `${hvornaar(e)}`),
@@ -361,6 +361,7 @@ async function redigerTabel(root, tabel) {
     h('div', { class: 'tab-knapper' }, h('button', { class: 'knap primær lille-knap', onclick: () => gem(række, ny) }, ny ? 'Tilføj' : 'Gem'), ny ? null : h('button', { class: 'knap fare-lys lille-knap', onclick: () => slet(række) }, icon('trash', 16))));
 
   clear(root).append(h('div', { class: 'panel' }, h('h2', null, T.titel),
+    tabel === 'kk_kategorier' ? h('p', { class: 'dæmpet' }, 'Opret eller ret kategorier her. Brug en kort kode med små bogstaver og bindestreger, fx "film-og-teater". Sæt kategorien inaktiv, hvis den ikke længere skal kunne vælges.') : null,
     tabel === 'kk_steder' ? h('p', { class: 'dæmpet' }, 'Tip: find koordinater ved at højreklikke et sted på openstreetmap.org → "Vis adresse". Koordinater er valgfrie og giver et kort på arrangementssiden.') : null,
     h('h3', null, 'Ny'), gitter(nyRække, true), h('h3', null, 'Eksisterende'), ...rows.map((r) => gitter({ ...r }, false))));
 }

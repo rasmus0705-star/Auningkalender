@@ -11,6 +11,7 @@ Gratis webapp (PWA) på GitHub Pages + Supabase. Eneste udgift: domænet.
 | `sql/01_setup.sql` | Database, regler (RLS), funktioner, billedlager, startdata |
 | `sql/02_eksempeldata.sql` | Valgfri testdata (`[EKSEMPEL]` i titlen) |
 | `sql/03_foerste_admin.sql` | Gør dig til første admin |
+| `sql/07_event_kategorier.sql` | Tilføj ekstra kategorier til arrangementer |
 | `.github/workflows/kk-job.yml` + `scripts/` | Kører hver time: delingssider, notifikationer og holder gratis Supabase vågen |
 | `sql/06_moderator_invites.sql` + `supabase/functions/kk-invite-moderator/` | Admininvitationer til nye moderatorer |
 | `404.html`, `d/` | Delingslinks (`/d/<id>/`) og forhåndsvisning til Facebook (`d/` oprettes af jobbet) |
@@ -27,10 +28,11 @@ Alt har præfikset `kk_`, så det rører ikke dine andre tabeller.
 
 1. **SQL Editor → New query**: indsæt hele `sql/01_setup.sql` → **Run**. Kan køres igen uden skade. (Valgfrit: `02_eksempeldata.sql` for testdata.)
 2. Kør også `sql/06_moderator_invites.sql`, hvis du vil bruge moderatorinvitationer.
-3. **Authentication → Sign In / Providers**: slå **Allow anonymous sign-ins** til (bruges, når en arrangør sender et arrangement, uden navn eller e-mail). Sørg for, at **Email** er slået til.
-4. **Authentication → URL Configuration**: sæt *Site URL* til din adresse (fx `https://<brugernavn>.github.io/<repo>/` eller dit domæne), så bekræftelsesmails peger det rigtige sted hen.
-5. **Project Settings → API**: kopiér *Project URL* og *anon public key* ind i `js/config.js`. Anon-nøglen er designet til at være offentlig. Brug **aldrig** `service_role`-nøglen på siden.
-6. **Storage**: tjek, at bucketen `kk-billeder` findes (oprettes af SQL'en). Ellers opret en *public* bucket med det navn, maks. 3 MB, kun billedfiler.
+3. Kør også `sql/07_event_kategorier.sql`, hvis arrangementer skal kunne have flere kategorier.
+4. **Authentication → Sign In / Providers**: slå **Allow anonymous sign-ins** til (bruges, når en arrangør sender et arrangement, uden navn eller e-mail). Sørg for, at **Email** er slået til.
+5. **Authentication → URL Configuration**: sæt *Site URL* til din adresse (fx `https://<brugernavn>.github.io/<repo>/` eller dit domæne), så bekræftelsesmails peger det rigtige sted hen.
+6. **Project Settings → API**: kopiér *Project URL* og *anon public key* ind i `js/config.js`. Anon-nøglen er designet til at være offentlig. Brug **aldrig** `service_role`-nøglen på siden.
+7. **Storage**: tjek, at bucketen `kk-billeder` findes (oprettes af SQL'en). Ellers opret en *public* bucket med det navn, maks. 3 MB, kun billedfiler.
 
 > **Deler du projekt med andre apps?** Anonyme brugere får databaserollen `authenticated`, ligesom rigtige brugere. Har en anden app i projektet politikker som `to authenticated using (true)`, kan anonyme besøgende pludselig læse dens data. Tjek først i SQL Editor: `select schemaname, tablename, policyname, roles, qual from pg_policies where 'authenticated' = any(roles) and tablename not like 'kk\_%';` og stram dem, der har `true` eller mangler ejer-tjek. Punkt 2 påvirker ellers ikke andre apps. Slå ikke *Captcha protection* til (afsnit 3), hvis andre apps i projektet bruger login, for den gælder for hele projektet.
 
@@ -131,6 +133,7 @@ Hvis du senere ændrer webadressen, skal både `SITE_URL` og `allowedOrigins` ø
 - **Nyt arrangement** (som moderator): udgives med det samme. Her kan du også sætte **gentagelser** (ugentligt, hver 2. uge, første torsdag i måneden m.m.). *Dupliker* kopierer et eksisterende arrangement.
 - **Aflys** viser arrangementet som aflyst. **Skjul** fjerner det midlertidigt.
 - **Steder** (moderator og admin) og **Indhold** (admin): kategorier, målgrupper, områder, afvisningsårsager og ordliste kan rettes uden kode.
+- Opret kategorier under **Moderator → Indhold → Kategorier**. Skriv en kort unik kode (fx `film-og-teater`), navn, ikon og farve, og tryk **Tilføj**. På et arrangement kan moderatorer vælge en hovedkategori og valgfrit flere ekstra kategorier; filtre og notifikationer bruger alle valgte kategorier.
 - Konfliktcheck i formularen advarer om samme sted/tid (rød), samtidige arrangementer (gul) og andet samme dag (blå).
 
 ### Rettelser fra arrangører (rettelink)

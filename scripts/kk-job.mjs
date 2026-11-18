@@ -234,8 +234,15 @@ const tidslinje = (e) => (udenTid(e) ? dagTekst(e.start_ts) : `${dagTekst(e.star
 async function nyeArrangementer() {
   // Alt der allerede er slut eller aflyst markeres uden at sende
   await skriv(`update kk_events set notificeret_ts = now() where status in ('godkendt','aflyst') and notificeret_ts is null and (slut_eff < now() or status = 'aflyst')`);
-  const nye = await q(`select id, titel, start_ts, slut_ts, kategori, sted_navn, sted_id, serie_id from kk_events
-    where status = 'godkendt' and not skjult and notificeret_ts is null and slut_eff >= now() order by start_ts limit 500`);
+  const ekstraKategorierFindes = (await q("select to_regclass('public.kk_event_kategorier') as tabel"))[0]?.tabel;
+  const nye = await q(ekstraKategorierFindes
+    ? `select e.id, e.titel, e.start_ts, e.slut_ts, e.kategori,
+        coalesce((select array_agg(ek.kategori) from kk_event_kategorier ek where ek.event_id = e.id), '{}'::text[]) as ekstra_kategorier,
+        e.sted_navn, e.sted_id, e.serie_id from kk_events e
+      where e.status = 'godkendt' and not e.skjult and e.notificeret_ts is null and e.slut_eff >= now() order by e.start_ts limit 500`
+    : `select e.id, e.titel, e.start_ts, e.slut_ts, e.kategori, '{}'::text[] as ekstra_kategorier,
+        e.sted_navn, e.sted_id, e.serie_id from kk_events e
+      where e.status = 'godkendt' and not e.skjult and e.notificeret_ts is null and e.slut_eff >= now() order by e.start_ts limit 500`);
   if (!nye.length) return console.log('Nye arrangementer: ingen.');
   const abonnenter = await q('select id, endpoint, p256dh, auth, alle_nye, kategorier from kk_abonnenter where alle_nye or cardinality(kategorier) > 0 limit 20000');
   const steder = Object.fromEntries((await q('select id, navn from kk_steder')).map((s) => [s.id, s.navn]));
@@ -244,13 +251,17 @@ async function nyeArrangementer() {
   const grupper = [], serier = new Map();
   for (const e of nye) {
     if (e.serie_id) {
-      if (serier.has(e.serie_id)) { serier.get(e.serie_id).antal++; continue; }
-      const g = { ...e, antal: 1 }; serier.set(e.serie_id, g); grupper.push(g);
-    } else grupper.push({ ...e, antal: 1 });
+      if (serier.has(e.serie_id)) {
+        const g = serier.get(e.serie_id); g.antal++;
+        g.kategorier = [...new Set([...g.kategorier, e.kategori, ...(e.ekstra_kategorier || [])])];
+        continue;
+      }
+      const g = { ...e, kategorier: [...new Set([e.kategori, ...(e.ekstra_kategorier || [])])], antal: 1 }; serier.set(e.serie_id, g); grupper.push(g);
+    } else grupper.push({ ...e, kategorier: [...new Set([e.kategori, ...(e.ekstra_kategorier || [])])], antal: 1 });
   }
   let sendt = 0;
   for (const a of abonnenter) {
-    const mine = grupper.filter((g) => a.alle_nye || (a.kategorier || []).includes(g.kategori));
+    const mine = grupper.filter((g) => a.alle_nye || g.kategorier.some((k) => (a.kategorier || []).includes(k)));
     if (!mine.length) continue;
     const beskeder = mine.length > 3
       ? [{ titel: `${mine.length} nye arrangementer`, tekst: mine.slice(0, 3).map((g) => g.titel).join(', ') + ' m.fl.', url: '#/', tag: 'kk-nye' }]
