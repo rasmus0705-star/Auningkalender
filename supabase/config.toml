@@ -1,0 +1,4 @@
+project_id = "skktwjsoqjgmilrojqac"
+
+[functions.kk-invite-moderator]
+verify_jwt = true

@@ -6,8 +6,38 @@ import { skeletter, tomtState, katPille, media } from './ui.js';
 
 // =========================== LOGIN ===========================
 export async function visMod(root) {
-  if (!S.rolle) return visLogin(root);
+  if (!S.rolle) {
+    if (!S.demo && S.user && !S.user.anonym) {
+      try { if (await S.api.moderatorInvitationAfventer()) return visModeratorInvitation(root); } catch { /* almindeligt login */ }
+    }
+    return visLogin(root);
+  }
   return visDashboard(root);
+}
+
+function visModeratorInvitation(root) {
+  const adgangskode = h('input', { type: 'password', required: true, minlength: 8, autocomplete: 'new-password', placeholder: 'Mindst 8 tegn' });
+  const gentag = h('input', { type: 'password', required: true, minlength: 8, autocomplete: 'new-password', placeholder: 'Gentag adgangskoden' });
+  const fejl = h('div', { class: 'fejl samlet', role: 'alert' });
+  const knap = h('button', { class: 'knap primær stor', type: 'submit' }, 'Accepter invitation');
+  const form = h('form', { class: 'form', onsubmit: async (ev) => {
+    ev.preventDefault(); fejl.textContent = '';
+    if (adgangskode.value !== gentag.value) { fejl.textContent = 'Adgangskoderne er ikke ens.'; return; }
+    knap.disabled = true;
+    try {
+      await S.api.accepterModeratorInvitation(adgangskode.value);
+      await opdaterRolle();
+      toast('Invitation accepteret. Du er nu moderator.', 'ok');
+      root.replaceChildren(); await visMod(root);
+    } catch (e) { fejl.textContent = e.message; knap.disabled = false; }
+  } },
+  h('div', { class: 'felt' }, h('label', null, 'Vælg adgangskode'), adgangskode),
+  h('div', { class: 'felt' }, h('label', null, 'Gentag adgangskode'), gentag),
+  fejl, knap);
+  clear(root).append(h('div', { class: 'login' },
+    h('h1', null, icon('lock', 26), ' Moderatorinvitation'),
+    h('p', { class: 'dæmpet' }, `Invitationen er sendt til ${S.user?.email || 'din e-mail'}. Vælg en adgangskode for at acceptere den.`),
+    form));
 }
 
 function visLogin(root) {
@@ -235,20 +265,36 @@ async function visRoller(root) {
   const tegn = () => {
     const nyEmail = h('input', { type: 'email', placeholder: 'e-mail på eksisterende konto', id: 'ny-rolle-email', class: 'fuld' });
     const nyRolle = h('select', { id: 'ny-rolle-valg' }, h('option', { value: 'moderator' }, 'Moderator'), h('option', { value: 'admin' }, 'Admin'));
+    const inviteEmail = h('input', { type: 'email', required: true, autocomplete: 'email', placeholder: 'ny.moderator@example.dk', class: 'fuld' });
+    const inviteError = h('div', { class: 'fejl samlet', role: 'alert' });
+    const inviteButton = h('button', { class: 'knap primær', type: 'submit' }, 'Send invitation');
     const gem = async (email, rolle) => {
       try { await S.api.tildelRolle(email, rolle); toast('Rolle opdateret', 'ok'); roller = await S.api.hentRoller(); tegn(); }
       catch (e) { toast(e.message, 'fejl'); }
     };
+    const inviteForm = h('form', { class: 'række-inline', onsubmit: async (ev) => {
+      ev.preventDefault(); inviteError.textContent = ''; inviteButton.disabled = true;
+      try {
+        await S.api.inviterModerator(inviteEmail.value.trim());
+        toast(`Moderatorinvitation sendt til ${inviteEmail.value.trim()}.`, 'ok');
+        inviteEmail.value = '';
+      } catch (e) { inviteError.textContent = e.message; }
+      inviteButton.disabled = false;
+    } }, inviteEmail, inviteButton);
     clear(root).append(
       h('div', { class: 'panel' },
         h('h2', null, 'Roller'),
-        h('p', { class: 'dæmpet' }, 'Moderatorer kan godkende, rette og slette arrangementer og redigere steder. Admins kan derudover tildele roller og rette kategorier, områder m.m. Nye personer skal først oprette en konto (Moderator → "Opret konto").'),
+        h('p', { class: 'dæmpet' }, 'Moderatorer kan godkende, rette og slette arrangementer og redigere steder. Admins kan derudover tildele roller, ændre kalenderindhold og invitere nye moderatorer.'),
         h('ul', { class: 'rolle-liste' }, roller.map((r) => h('li', null,
           h('span', { class: 'rolle-email' }, r.email),
           h('select', { 'aria-label': `Rolle for ${r.email}`, onchange: (ev) => gem(r.email, ev.target.value), value: r.rolle },
             h('option', { value: 'moderator' }, 'Moderator'), h('option', { value: 'admin' }, 'Admin'), h('option', { value: 'ingen' }, 'Fjern rolle'))))),
-        h('h3', null, 'Tildel ny rolle'),
-        h('div', { class: 'række-inline' }, nyEmail, nyRolle, h('button', { class: 'knap primær', onclick: () => { if (nyEmail.value.trim()) gem(nyEmail.value.trim(), nyRolle.value); } }, 'Tildel'))));
+        h('h3', null, 'Tildel rolle til eksisterende konto'),
+        h('div', { class: 'række-inline' }, nyEmail, nyRolle, h('button', { class: 'knap primær', onclick: () => { if (nyEmail.value.trim()) gem(nyEmail.value.trim(), nyRolle.value); } }, 'Tildel'))),
+      h('div', { class: 'panel' },
+        h('h2', null, 'Invitér ny moderator'),
+        h('p', { class: 'dæmpet' }, 'Send en Supabase-invitation til e-mailadressen. Modtageren følger linket, vælger en adgangskode og får moderatorrollen, når invitationen accepteres.'),
+        inviteForm, inviteError));
   };
   tegn();
 }

@@ -12,6 +12,7 @@ Gratis webapp (PWA) på GitHub Pages + Supabase. Eneste udgift: domænet.
 | `sql/02_eksempeldata.sql` | Valgfri testdata (`[EKSEMPEL]` i titlen) |
 | `sql/03_foerste_admin.sql` | Gør dig til første admin |
 | `.github/workflows/kk-job.yml` + `scripts/` | Kører hver time: delingssider, notifikationer og holder gratis Supabase vågen |
+| `sql/06_moderator_invites.sql` + `supabase/functions/kk-invite-moderator/` | Admininvitationer til nye moderatorer |
 | `404.html`, `d/` | Delingslinks (`/d/<id>/`) og forhåndsvisning til Facebook (`d/` oprettes af jobbet) |
 
 ## 0. Prøv den først (2 minutter, ingen opsætning)
@@ -25,10 +26,11 @@ Siden bruger moduler og skal derfor åbnes via en webserver (ikke ved at dobbelt
 Alt har præfikset `kk_`, så det rører ikke dine andre tabeller.
 
 1. **SQL Editor → New query**: indsæt hele `sql/01_setup.sql` → **Run**. Kan køres igen uden skade. (Valgfrit: `02_eksempeldata.sql` for testdata.)
-2. **Authentication → Sign In / Providers**: slå **Allow anonymous sign-ins** til (bruges, når en arrangør sender et arrangement, uden navn eller e-mail). Sørg for, at **Email** er slået til.
-3. **Authentication → URL Configuration**: sæt *Site URL* til din adresse (fx `https://<brugernavn>.github.io/<repo>/` eller dit domæne), så bekræftelsesmails peger det rigtige sted hen.
-4. **Project Settings → API**: kopiér *Project URL* og *anon public key* ind i `js/config.js`. Anon-nøglen er designet til at være offentlig. Brug **aldrig** `service_role`-nøglen på siden.
-5. **Storage**: tjek, at bucketen `kk-billeder` findes (oprettes af SQL'en). Ellers opret en *public* bucket med det navn, maks. 3 MB, kun billedfiler.
+2. Kør også `sql/06_moderator_invites.sql`, hvis du vil bruge moderatorinvitationer.
+3. **Authentication → Sign In / Providers**: slå **Allow anonymous sign-ins** til (bruges, når en arrangør sender et arrangement, uden navn eller e-mail). Sørg for, at **Email** er slået til.
+4. **Authentication → URL Configuration**: sæt *Site URL* til din adresse (fx `https://<brugernavn>.github.io/<repo>/` eller dit domæne), så bekræftelsesmails peger det rigtige sted hen.
+5. **Project Settings → API**: kopiér *Project URL* og *anon public key* ind i `js/config.js`. Anon-nøglen er designet til at være offentlig. Brug **aldrig** `service_role`-nøglen på siden.
+6. **Storage**: tjek, at bucketen `kk-billeder` findes (oprettes af SQL'en). Ellers opret en *public* bucket med det navn, maks. 3 MB, kun billedfiler.
 
 > **Deler du projekt med andre apps?** Anonyme brugere får databaserollen `authenticated`, ligesom rigtige brugere. Har en anden app i projektet politikker som `to authenticated using (true)`, kan anonyme besøgende pludselig læse dens data. Tjek først i SQL Editor: `select schemaname, tablename, policyname, roles, qual from pg_policies where 'authenticated' = any(roles) and tablename not like 'kk\_%';` og stram dem, der har `true` eller mangler ejer-tjek. Punkt 2 påvirker ellers ikke andre apps. Slå ikke *Captcha protection* til (afsnit 3), hvis andre apps i projektet bruger login, for den gælder for hele projektet.
 
@@ -98,7 +100,19 @@ Vil du have captcha: opret en gratis Turnstile-site i Cloudflare. Indsæt *site 
 1. Åbn siden → **Moderator** (nederst) → **Ny moderator? Opret konto**. Bekræft e-mailen, hvis du får en.
 2. Åbn `sql/03_foerste_admin.sql`, skift e-mailadressen til din og kør den i SQL Editor.
 3. Log ind på Moderator-siden. Du er nu admin.
-4. Gå til **Roller** for at give andre moderator- eller admin-rettigheder (de skal først have oprettet en konto, som i punkt 1). Der skal altid være mindst én admin.
+4. Gå til **Roller** for at give en eksisterende konto moderator- eller adminrettigheder, eller invitere en ny moderator. Der skal altid være mindst én admin.
+
+### Invitér en ny moderator
+
+En admin kan invitere en person, før vedkommende har oprettet en konto. Gå til **Moderator → Roller → Invitér ny moderator**, og indtast e-mailadressen. Supabase sender et invitationlink. Modtageren vælger selv en adgangskode; moderatorrollen tildeles først, når invitationen accepteres. Eksisterende konti kan stadig få en rolle direkte i samme fane.
+
+Funktionen bruger en Supabase Edge Function, så `service_role`/secret key aldrig ligger i browseren:
+
+1. Kør `sql/06_moderator_invites.sql` i SQL Editor.
+2. Fra projektmappen, log ind med Supabase CLI (`supabase login`), og deploy funktionen: `supabase functions deploy kk-invite-moderator --project-ref skktwjsoqjgmilrojqac`.
+3. Supabase Auth' standardmail sender kun til adresser, der tilhører dit Supabase-organization team, og den har en lav afsendelsesgrænse. For at invitere andre adresser skal du først konfigurere en SMTP-udbyder under **Authentication → SMTP Settings**.
+
+Hvis du senere ændrer webadressen, skal både `SITE_URL` og `allowedOrigins` øverst i `supabase/functions/kk-invite-moderator/index.ts` opdateres, og funktionen deployes igen.
 
 ## 4b. Startindlæsning fra det gamle dokument
 

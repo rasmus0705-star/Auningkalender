@@ -165,6 +165,9 @@ export function createApi(C) {
     async sletEvent(id) { events = events.filter((e) => e.id !== id); },
     async hentRoller() { return vent(roller); },
     async tildelRolle(email, r) { const i = roller.findIndex((x) => x.email === email); if (r === 'ingen') { if (i >= 0) roller.splice(i, 1); } else if (i >= 0) roller[i].rolle = r; else roller.push({ user_id: nyId(), email, rolle: r }); },
+    async inviterModerator() { throw new Error('Rigtige invitationer kræver den tilkoblede Supabase-database.'); },
+    async moderatorInvitationAfventer() { return false; },
+    async accepterModeratorInvitation() { throw new Error('Moderatorinvitationer virker kun i den tilkoblede Supabase-database.'); },
     async hentTabel(t) { return vent(tabeller[t][1]); },
     async gemRække(t, r) {
       const [pk, liste] = tabeller[t]; const i = liste.findIndex((x) => x[pk] === r[pk]);

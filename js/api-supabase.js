@@ -131,6 +131,13 @@ export function createApi(C) {
     // ---------- admin ----------
     async hentRoller() { return ok(await sb.rpc('kk_hent_roller')); },
     async tildelRolle(email, rolle) { ok(await sb.rpc('kk_tildel_rolle', { p_email: email, p_rolle: rolle })); },
+    async inviterModerator(email) { return ok(await sb.functions.invoke('kk-invite-moderator', { body: { email } })); },
+    async moderatorInvitationAfventer() { return ok(await sb.rpc('kk_moderator_invite_pending')); },
+    async accepterModeratorInvitation(password) {
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) throw error;
+      return ok(await sb.rpc('kk_moderator_invite_accept'));
+    },
     async hentTabel(tabel) {
       const orden = { kk_kategorier: 'sortering', kk_maalgrupper: 'sortering', kk_omraader: 'sortering', kk_steder: 'sortering', kk_afvisningsaarsager: 'id', kk_ordliste: 'id' }[tabel];
       return ok(await sb.from(tabel).select('*').order(orden));

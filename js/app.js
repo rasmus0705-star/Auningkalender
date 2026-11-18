@@ -37,8 +37,13 @@ async function start() {
     S.api = mod.createApi(CONFIG);
     S.user = await S.api.init();
     await opdaterRolle();
+    let invitationAfventer = false;
+    if (!DEMO && S.user && !S.user.anonym) {
+      try { invitationAfventer = await S.api.moderatorInvitationAfventer(); } catch { invitationAfventer = false; }
+    }
     S.api.onAuth(async (u) => { S.user = u; await opdaterRolle(); tegnNav(); });
     await indlaesStamdata();
+    if (invitationAfventer) location.hash = '#/mod';
   } catch (e) {
     console.error(e);
     clear(app).append(h('div', { class: 'tom' }, h('h2', null, 'Kalenderen kunne ikke starte'), h('p', null, 'Tjek din internetforbindelse, og at Supabase-nøglerne i js/config.js er rigtige.'), h('pre', { class: 'dæmpet' }, String(e.message || e))));
