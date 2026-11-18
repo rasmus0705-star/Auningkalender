@@ -1,7 +1,7 @@
 // Månedskalender med dagsliste.
-import { h, icon, clear, dayKey, addDays, dowOf, dageIMaaned, fmt, pad } from './util.js';
+import { h, icon, clear, dayKey, addDays, dowOf, dageIMaaned, fmt, pad, kapitaliser } from './util.js';
 import { S, sikrData, filtrer, kat } from './state.js';
-import { eventKort, kategoriChips, skeletter, tomtState, dagOverskrift } from './ui.js';
+import { eventKort, kategoriChips, skeletter, tomtState } from './ui.js';
 
 const UGEDAGE = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
 
@@ -55,16 +55,20 @@ export async function visKalender(root) {
       celler.push(h('button', {
         type: 'button', role: 'gridcell', class: 'kal-celle' + (key === idag ? ' idag' : '') + (key === S.kal.valgt ? ' valgt' : '') + (dagens.length ? ' har' : '') + (travl ? ' travl' : ''),
         'aria-label': `${dag}. ${fmt.maanedLang(y, m)}${dagens.length ? ', ' + dagens.length + ' arrangementer' : ''}`, 'aria-pressed': key === S.kal.valgt ? 'true' : 'false',
-        onclick: () => { S.kal.valgt = key; tegn(); dagListe.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); },
+        onclick: () => { S.kal.valgt = key; tegn(); dagListe.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
       },
       h('span', { class: 'kal-nr' }, dag),
+      dagens.length ? h('span', { class: 'kal-antal', 'aria-hidden': 'true' }, dagens.length) : null,
       h('span', { class: 'kal-prikker' }, dagens.slice(0, 4).map((e) => h('i', { style: `background:${kat(e.kategori).farve}` })), dagens.length > 4 ? h('em', null, '+') : null),
       h('span', { class: 'kal-titler' }, dagens.slice(0, 2).map((e) => h('span', { class: 'kal-tit', style: `--c:${kat(e.kategori).farve}` }, e.titel)), dagens.length > 2 ? h('span', { class: 'kal-mere' }, `+${dagens.length - 2}`) : null)));
     }
     clear(gitter).append(...celler);
 
     const valgte = (perDag.get(S.kal.valgt) || []).slice().sort((a, b) => a._start - b._start);
-    clear(dagListe).append(h('h2', { class: 'dag-overskrift' }, dagOverskrift(S.kal.valgt)),
+    const valgtDato = new Date(`${S.kal.valgt}T12:00:00Z`);
+    clear(dagListe).append(h('div', { class: 'kal-dagliste-hoved', 'aria-live': 'polite' },
+      h('h2', null, kapitaliser(fmt.dagLang(valgtDato))),
+      h('p', null, S.kal.valgt === idag ? 'I dag · ' : '', `${valgte.length} ${valgte.length === 1 ? 'arrangement' : 'arrangementer'}`)),
       valgte.length ? h('div', { class: 'kort-grid' }, valgte.map((e) => eventKort(e, { kompakt: true })))
         : h('div', { class: 'tom lille-tom' }, h('p', null, 'Ingen arrangementer denne dag.'), h('a', { class: 'knap sekundær', href: '#/opret' }, 'Opret arrangement')));
   }

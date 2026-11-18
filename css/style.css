@@ -176,12 +176,17 @@ textarea { resize: vertical; }
 .kal-celle.valgt { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
 .kal-celle.travl { background: color-mix(in srgb, var(--gul-bg) 70%, var(--surf)); }
 .kal-nr { font-weight: 750; font-size: .85rem; display: inline-grid; place-items: center; min-width: 26px; height: 26px; border-radius: 50%; padding: 0 4px; align-self: flex-start; }
+.kal-antal { position: absolute; top: .35rem; right: .35rem; display: grid; place-items: center; min-width: 21px; height: 21px; padding: 0 .25rem; border-radius: 999px; background: var(--accent); color: #fff; font-size: .7rem; line-height: 1; font-weight: 800; }
 .kal-prikker { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
 .kal-prikker i { width: 7px; height: 7px; border-radius: 50%; display: block; }
 .kal-prikker em { font-size: .7rem; color: var(--ink2); font-style: normal; line-height: 1; }
 .kal-titler { display: none; flex-direction: column; gap: 2px; }
 .kal-tit { font-size: .72rem; font-weight: 650; line-height: 1.25; color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--surf)); border-radius: 5px; padding: 1px 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kal-mere { font-size: .7rem; color: var(--ink2); font-weight: 650; }
+.kal-dagliste { scroll-margin-top: 5.5rem; padding: .9rem; background: var(--surf); border: 1px solid var(--line); border-radius: var(--r); }
+.kal-dagliste-hoved { display: flex; align-items: baseline; justify-content: space-between; gap: .7rem; flex-wrap: wrap; margin-bottom: .8rem; }
+.kal-dagliste-hoved h2 { margin: 0; font-size: 1.15rem; text-transform: capitalize; }
+.kal-dagliste-hoved p { margin: 0; color: var(--ink2); font-size: .9rem; font-weight: 650; }
 @media (min-width: 760px) {
   .kal-celle { min-height: 96px; padding: .45rem; }
   .kal-prikker { display: none; }
