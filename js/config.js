@@ -16,7 +16,7 @@ export const CONFIG = {
   vapidPublicKey: '',
 
   // --- Din adresse (valgfri; bruges til delingslinks. Tom = samme adresse som siden) ---
-  siteUrl: '',
+  siteUrl: 'https://rasmus0705-star.github.io/Auningkalender/',
 
   // --- Navn og tekster ---
   siteName: 'Kulturkalender Auning',
