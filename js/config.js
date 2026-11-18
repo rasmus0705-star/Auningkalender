@@ -5,8 +5,8 @@
 // =====================================================================
 export const CONFIG = {
   // --- Supabase (Project Settings -> API) ---
-  supabaseUrl: 'https://DIT-PROJEKT.supabase.co',
-  supabaseAnonKey: 'DIN-ANON-NOEGLE',
+  supabaseUrl: 'https://skktwjsoqjgmilrojqac.supabase.co',
+  supabaseAnonKey: 'sb_publishable_NIvJlbdDLJ795tvYZhT8TQ_Mcn7MJUY',
 
   // --- Cloudflare Turnstile (valgfri; lad stå tom hvis du ikke bruger captcha) ---
   turnstileSiteKey: '',
