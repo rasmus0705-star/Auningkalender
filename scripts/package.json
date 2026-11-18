@@ -1,0 +1,6 @@
+{
+  "name": "kk-job",
+  "private": true,
+  "type": "module",
+  "dependencies": { "pg": "^8.11.5", "web-push": "^3.6.7" }
+}

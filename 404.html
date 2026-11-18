@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Kulturkalender</title>
+<style>body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center;color:#222}a{color:#1f6f54;font-weight:700}</style>
+</head>
+<body>
+<div><h1>Siden findes ikke</h1><p><a id="hjem" href="./">Gå til kalenderen</a></p></div>
+<script>
+// GitHub Pages bruger denne fil til adresser, der ikke findes. Delingslinks (.../d/<id>/) sendes videre til arrangementet.
+(function () {
+  var p = location.pathname, i = p.lastIndexOf('/d/');
+  var base = i >= 0 ? p.slice(0, i + 1) : p.replace(/[^/]*$/, '');
+  document.getElementById('hjem').href = base;
+  var m = i >= 0 && p.slice(i + 3).match(/^([0-9a-fA-F-]{36})\/?$/);
+  if (m) location.replace(base + '#/event/' + m[1]);
+})();
+</script>
+</body>
+</html>
