@@ -6,7 +6,7 @@ const BUCKET = 'kk-billeder';
 
 export function createApi(C) {
   const sb = createClient(C.supabaseUrl, C.supabaseAnonKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
   });
 
   const ok = ({ data, error }) => { if (error) throw error; return data; };
