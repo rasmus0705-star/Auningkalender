@@ -18,12 +18,12 @@ export function createApi(C) {
     const { kk_event_kategorier, ...event } = r;
     return med({ ...event, kategorier: [...new Set([event.kategori, ...relationer.map((x) => x.kategori)])] });
   };
-  const gemEkstraKategorier = async (ids, primær, ekstra = []) => {
+  const gemEkstraKategorier = async (ids, primær, ekstra = [], { erstat = true } = {}) => {
     const slugs = [...new Set(ekstra)].filter((slug) => slug && slug !== primær);
     if (!kategoriTabelTilgaengelig && slugs.length) throw new Error('Kør først sql/07_event_kategorier.sql i Supabase for at bruge ekstra kategorier.');
     if (!kategoriTabelTilgaengelig) return;
     for (const id of ids) {
-      ok(await sb.from('kk_event_kategorier').delete().eq('event_id', id));
+      if (erstat) ok(await sb.from('kk_event_kategorier').delete().eq('event_id', id));
       if (slugs.length) ok(await sb.from('kk_event_kategorier').insert(slugs.map((kategori) => ({ event_id: id, kategori }))));
     }
   };
@@ -123,7 +123,7 @@ export function createApi(C) {
     async opret(event, kontakt) {
       await kraevEkstraKategoriTabel(event.kategori, event.kategorier || []);
       const ids = ok(await sb.rpc('kk_opret', { p: event, p_kontakt: kontakt || null }));
-      if (event.kategorier?.length > 1) await gemEkstraKategorier(ids, event.kategori, event.kategorier);
+      if (event.kategorier?.length > 1) await gemEkstraKategorier(ids, event.kategori, event.kategorier, { erstat: false });
       return ids;
     },
 

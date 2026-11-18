@@ -18,3 +18,13 @@ create policy kk_event_kategorier_laes on kk_event_kategorier
 drop policy if exists kk_event_kategorier_mod on kk_event_kategorier;
 create policy kk_event_kategorier_mod on kk_event_kategorier
   for all to authenticated using (kk_er_moderator()) with check (kk_er_moderator());
+
+drop policy if exists kk_event_kategorier_indsend on kk_event_kategorier;
+create policy kk_event_kategorier_indsend on kk_event_kategorier
+  for insert to authenticated with check (
+    kk_er_moderator()
+    or exists (
+      select 1 from kk_events e
+      where e.id = event_id and e.oprettet_af = auth.uid() and e.status = 'afventer'
+    )
+  );

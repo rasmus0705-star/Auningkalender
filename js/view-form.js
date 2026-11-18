@@ -37,7 +37,7 @@ export async function visForm(root, { id, kopi, token } = {}) {
   const katRadios = h('div', { class: 'kat-valg', role: 'radiogroup', 'aria-label': 'Kategori' },
     S.stam.kategorier.map((k) => h('label', { class: 'kat-radio', style: `--c:${k.farve}` },
       h('input', { type: 'radio', name: 'kategori', value: k.slug, checked: e0.kategori === k.slug, onchange: konfliktCheck }), h('span', null, k.ikon, ' ', k.navn))));
-  const ekstraKatValg = mod ? h('div', { class: 'kat-valg', role: 'group', 'aria-label': 'Ekstra kategorier' },
+  const ekstraKatValg = !ret ? h('div', { class: 'kat-valg', role: 'group', 'aria-label': 'Ekstra kategorier' },
     S.stam.kategorier.map((k) => h('label', { class: 'kat-radio', style: `--c:${k.farve}` },
       h('input', { type: 'checkbox', name: 'ekstra_kategorier', value: k.slug, checked: (e0.kategorier || []).includes(k.slug) && e0.kategori !== k.slug }), h('span', null, k.ikon, ' ', k.navn)))) : null;
   const beskr = h('textarea', { id: 'f-beskrivelse', name: 'beskrivelse', rows: 5, maxlength: 4000, placeholder: 'Hvad skal der ske? Hvem er det for? Skal man tilmelde sig?' }, e0.beskrivelse || '');
@@ -55,6 +55,13 @@ export async function visForm(root, { id, kopi, token } = {}) {
   const ed0 = e0.slut_ts && !kopi ? dayKey(e0.slut_ts) : '';
   const dato = (navn, v, min) => inp(navn, 'date', { value: v || '', min, onchange: konfliktCheck });
   const tid = (navn, v) => inp(navn, 'time', { value: v || '', onchange: konfliktCheck, step: 300 });
+  const sluttidInp = tid('sluttid', e0.slut_ts ? tidTekst(e0.slut_ts) : '');
+  const sluttidUoplyst = h('input', { type: 'checkbox', id: 'f-sluttid-uoplyst', checked: !!e0.start_ts && !e0.slut_ts, onchange: (ev) => {
+    sluttidInp.disabled = ev.target.checked;
+    if (ev.target.checked) sluttidInp.value = '';
+    konfliktCheck();
+  } });
+  sluttidInp.disabled = sluttidUoplyst.checked;
   const idag = dayKey(new Date());
   const gentagSel = h('select', { id: 'f-gentag', name: 'gentag', onchange: opdaterGentag },
     h('option', { value: 'ingen' }, 'Gentages ikke'), h('option', { value: 'uge' }, 'Hver uge (samme ugedag)'),
@@ -101,7 +108,8 @@ export async function visForm(root, { id, kopi, token } = {}) {
     sektion(1, 'Hvad skal der ske?',
       felt('Titel', inp('titel', 'text', { id: 'f-titel', value: e0.titel || '', maxlength: 120, placeholder: 'Fx "Koncert med Auning Musikforening"', oninput: null }), { navn: 'titel', krav: true }),
       h('div', { class: 'felt', dataset: { felt: 'kategori' } }, h('label', null, 'Hovedkategori', h('span', { class: 'krav' }, ' *')), katRadios,
-        ekstraKatValg ? h('div', { class: 'felt' }, h('label', null, 'Ekstra kategorier (valgfrit)'), ekstraKatValg) : null,
+        ekstraKatValg ? h('div', { class: 'felt' }, h('label', null, 'Flere kategorier (valgfrit)'), ekstraKatValg,
+          h('small', { class: 'hint' }, mod ? 'Vælg de kategorier, der passer. Du kan fjerne dem igen senere.' : 'Vælg gerne flere, hvis arrangementet passer til flere kategorier. En moderator gennemgår dem.')) : null,
         h('div', { class: 'fejl', id: 'fejl-kategori', role: 'alert' })),
       felt('Beskrivelse', beskr, { navn: 'beskrivelse', hint: 'Skriv gerne hvem det er for, om der er tilmelding, og hvad man skal medbringe.' }),
       ...(ret ? [] : [felt('Billede', billedeInput, { navn: 'billede', hint: 'Valgfrit. Brug gerne et liggende billede. Det formindskes automatisk.' }), preview])),
@@ -109,7 +117,8 @@ export async function visForm(root, { id, kopi, token } = {}) {
       h('div', { class: 'række' },
         felt('Startdato', dato('startdato', sd0, mod || ret ? undefined : idag), { navn: 'startdato', krav: true }), felt('Starttid', tid('starttid', e0.start_ts && !kopi ? tidTekst(e0.start_ts) : (kopi ? tidTekst(e0.start_ts) : '')), { navn: 'starttid', krav: true })),
       h('div', { class: 'række' },
-        felt('Slutdato', dato('slutdato', ed0), { navn: 'slutdato', hint: 'Udfyld kun, hvis arrangementet varer flere dage.' }), felt('Sluttid', tid('sluttid', e0.slut_ts && !kopi ? tidTekst(e0.slut_ts) : (kopi && e0.slut_ts ? tidTekst(e0.slut_ts) : '')), { navn: 'sluttid' })),
+        felt('Slutdato', dato('slutdato', ed0), { navn: 'slutdato', hint: 'Udfyld kun, hvis arrangementet varer flere dage.' }),
+        h('div', { class: 'felt' }, felt('Sluttid', sluttidInp, { navn: 'sluttid' }), h('label', { class: 'check' }, sluttidUoplyst, ' Sluttidspunkt ikke oplyst'))),
       gentagBox),
     sektion(3, 'Hvor?',
       h('div', { class: 'række' }, felt('Område', omrSel, { navn: 'omraade' }), felt('Sted (valgfrit)', stedSel, { navn: 'sted', hint: 'Du kan lade det stå tomt og tilføje stedet senere.' })), andetBox, konfBox),
