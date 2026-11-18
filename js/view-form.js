@@ -68,10 +68,10 @@ export async function visForm(root, { id, kopi, token } = {}) {
   const omrSel = h('select', { id: 'f-omraade', name: 'omraade' }, S.stam.omraader.map((o) => h('option', { value: o.slug, selected: (e0.omraade || CONFIG.defaultOmraade) === o.slug }, o.navn)));
   const harSted = e0.sted_id || !e0.sted_navn;
   const stedSel = h('select', { id: 'f-sted', name: 'sted', onchange: () => { toggelSted(); konfliktCheck(); } },
-    h('option', { value: '' }, 'Vælg sted …'), S.stam.steder.map((s) => h('option', { value: s.id, selected: e0.sted_id === s.id }, s.navn)), h('option', { value: '__andet', selected: !!e0.sted_navn && !e0.sted_id }, 'Andet sted …'));
+    h('option', { value: '' }, 'Vælg sted (valgfrit) …'), S.stam.steder.map((s) => h('option', { value: s.id, selected: e0.sted_id === s.id }, s.navn)), h('option', { value: '__andet', selected: !!e0.sted_navn && !e0.sted_id }, 'Andet sted …'));
   const stedNavn = inp('stednavn', 'text', { value: e0.sted_id ? '' : (e0.sted_navn || ''), maxlength: 120, placeholder: 'Fx "Hos Hansen, Skovvej 3"', oninput: konfliktCheck });
   const stedAdr = inp('adresse', 'text', { value: e0.sted_id ? '' : (e0.adresse || ''), maxlength: 200, placeholder: 'Adresse (valgfrit)' });
-  const andetBox = h('div', { class: 'andet-sted', hidden: harSted }, felt('Stedets navn', stedNavn, { navn: 'stednavn', krav: true }), felt('Adresse', stedAdr, { navn: 'adresse' }));
+  const andetBox = h('div', { class: 'andet-sted', hidden: harSted }, felt('Stedets navn', stedNavn, { navn: 'stednavn' }), felt('Adresse', stedAdr, { navn: 'adresse' }));
   function toggelSted() { andetBox.hidden = stedSel.value !== '__andet'; }
 
   // ---------- konfliktpanel ----------
@@ -112,7 +112,7 @@ export async function visForm(root, { id, kopi, token } = {}) {
         felt('Slutdato', dato('slutdato', ed0), { navn: 'slutdato', hint: 'Udfyld kun, hvis arrangementet varer flere dage.' }), felt('Sluttid', tid('sluttid', e0.slut_ts && !kopi ? tidTekst(e0.slut_ts) : (kopi && e0.slut_ts ? tidTekst(e0.slut_ts) : '')), { navn: 'sluttid' })),
       gentagBox),
     sektion(3, 'Hvor?',
-      h('div', { class: 'række' }, felt('Område', omrSel, { navn: 'omraade' }), felt('Sted', stedSel, { navn: 'sted', krav: true })), andetBox, konfBox),
+      h('div', { class: 'række' }, felt('Område', omrSel, { navn: 'omraade' }), felt('Sted (valgfrit)', stedSel, { navn: 'sted', hint: 'Du kan lade det stå tomt og tilføje stedet senere.' })), andetBox, konfBox),
     sektion(4, 'Detaljer',
       h('div', { class: 'række' }, felt('Målgruppe', mgSel, { navn: 'maalgruppe', krav: true }), felt('Pris', prisRække, { navn: 'pris' })),
       felt('Arrangør', inp('arrangoer', 'text', { value: e0.arrangoer || '', maxlength: 120, placeholder: 'Forening, virksomhed eller navn' }), { navn: 'arrangoer', krav: true }),
@@ -241,7 +241,6 @@ export async function visForm(root, { id, kopi, token } = {}) {
     if (!g('starttid')) fejl.starttid = 'Vælg et tidspunkt.';
     if (t && t.slut && new Date(t.slut) < new Date(t.start)) fejl.sluttid = 'Slut skal være efter start.';
     const sted = stedInfo();
-    if (!sted.sted_id && !sted.sted_navn) fejl[g('sted') === '__andet' ? 'stednavn' : 'sted'] = 'Vælg et sted, eller skriv hvor det foregår.';
     if (g('arrangoer').length < 2) fejl.arrangoer = 'Skriv hvem der arrangerer.';
     let link = g('link');
     if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;

@@ -631,7 +631,6 @@ begin
   if om is not null and not exists (select 1 from kk_omraader where slug = om) then raise exception 'Ukendt område'; end if;
   sid := nullif(p->>'sted_id','')::uuid;
   if sid is not null and not exists (select 1 from kk_steder where id = sid) then raise exception 'Ukendt sted'; end if;
-  if sid is null and coalesce(trim(p->>'sted_navn'),'') = '' then raise exception 'Sted mangler'; end if;
   lnk := nullif(trim(p->>'link_url'),'');
   if lnk is not null and lnk !~* '^https?://' then raise exception 'Ugyldigt link'; end if;
   if char_length(coalesce(p->>'beskrivelse','')) > 4000 or char_length(coalesce(p->>'pris_tekst','')) > 60
