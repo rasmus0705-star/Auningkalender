@@ -135,6 +135,8 @@ textarea { resize: vertical; }
 .kort-meta { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; padding-right: 40px; }
 .kort-linje { margin: 0; font-size: .86rem; color: var(--ink2); display: flex; gap: .4rem; align-items: center; min-width: 0; }
 .kort-linje .ikon { color: var(--c); }
+.kort-linje.kort-sted { color: var(--ink); font-weight: 700; }
+.kort-linje.kort-sted.sted-ukendt { color: var(--ink2); font-weight: 500; font-style: italic; }
 .pris { font-size: .76rem; font-weight: 700; color: var(--ink2); background: var(--surf2); padding: .12rem .55rem; border-radius: 999px; }
 .pille { display: inline-flex; align-items: center; gap: .15rem; font-size: .76rem; font-weight: 700; color: var(--c); background: color-mix(in srgb, var(--c) 13%, var(--surf)); padding: .12rem .6rem; border-radius: 999px; }
 .datobadge { position: absolute; left: 8px; top: 8px; z-index: 2; display: grid; place-items: center; background: var(--surf); color: var(--ink); border-radius: 11px; padding: .2rem .5rem; line-height: 1; min-width: 42px; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); }

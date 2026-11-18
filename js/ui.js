@@ -50,7 +50,7 @@ export function eventKort(ev, { kompakt = false } = {}) {
       h('div', { class: 'kort-meta' }, katPiller(ev), pris ? h('span', { class: 'pris' }, pris) : null),
       h('h3', null, h('a', { class: 'kort-link', href: `#/event/${ev.id}` }, ev.titel)),
       h('p', { class: 'kort-linje' }, icon('clock', 15), kortTid(ev)),
-      sted ? h('p', { class: 'kort-linje' }, icon('pin', 15), sted) : null),
+      h('p', { class: 'kort-linje kort-sted' + (sted ? '' : ' sted-ukendt') }, icon('pin', 15), sted || 'Sted ikke oplyst')),
     favKnap(ev));
 }
 

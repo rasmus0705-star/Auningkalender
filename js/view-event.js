@@ -25,8 +25,8 @@ export async function visEvent(root, id) {
   const aflyst = ev.status === 'aflyst';
   const venter = ev.status !== 'godkendt' && ev.status !== 'aflyst';
   const sted = ev.sted_id ? stedById(ev.sted_id) : null;
-  const stedTekst = ev.sted_navn || sted?.navn;
-  const adresse = ev.adresse || sted?.adresse;
+  const stedTekst = sted?.navn || ev.sted_navn;
+  const adresse = sted?.adresse || ev.adresse;
   const pris = (ev.pris_tekst || '').trim();
 
   const favB = h('button', { type: 'button', class: 'knap sekundær', 'aria-pressed': S.favs.has(ev.id) ? 'true' : 'false' });

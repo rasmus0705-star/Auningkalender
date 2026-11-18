@@ -13,9 +13,15 @@ export function createApi(C) {
   let kategoriTabelTilgaengelig = null;
   const url = (sti) => (sti ? sb.storage.from(BUCKET).getPublicUrl(sti).data.publicUrl : null);
   const med = (r) => ({ ...r, billede_url: url(r.billede_sti) });
+  const medSted = (r) => {
+    const relation = Array.isArray(r.kk_steder) ? r.kk_steder[0] : r.kk_steder;
+    const { kk_steder, ...event } = r;
+    return { ...event, sted_navn: relation?.navn || event.sted_navn || null, adresse: relation?.adresse || event.adresse || null };
+  };
   const medKategorier = (r) => {
     const relationer = r.kk_event_kategorier || [];
-    const { kk_event_kategorier, ...event } = r;
+    const { kk_event_kategorier, ...rest } = r;
+    const event = medSted(rest);
     return med({ ...event, kategorier: [...new Set([event.kategori, ...relationer.map((x) => x.kategori)])] });
   };
   const gemEkstraKategorier = async (ids, primær, ekstra = [], { erstat = true } = {}) => {
@@ -43,7 +49,7 @@ export function createApi(C) {
       kategoriTabelTilgaengelig = false;
       const data = ok(await fallback());
       const rows = Array.isArray(data) ? data : data ? [data] : [];
-      const mapped = rows.map((r) => med({ ...r, kategorier: [r.kategori] }));
+      const mapped = rows.map((r) => medKategorier({ ...r, kk_event_kategorier: [] }));
       return Array.isArray(data) ? mapped : mapped[0] || null;
     }
     kategoriTabelTilgaengelig = true;
@@ -98,13 +104,13 @@ export function createApi(C) {
     },
     async hentEvents() {
       return hentKategoriserede(
-        () => sb.from('kk_events').select('*, kk_event_kategorier(kategori)').in('status', ['godkendt', 'aflyst']).eq('skjult', false).gte('slut_eff', aarsstart()).order('start_ts').limit(1500),
-        () => sb.from('kk_events').select('*').in('status', ['godkendt', 'aflyst']).eq('skjult', false).gte('slut_eff', aarsstart()).order('start_ts').limit(1500));
+        () => sb.from('kk_events').select('*, kk_steder(navn,adresse), kk_event_kategorier(kategori)').in('status', ['godkendt', 'aflyst']).eq('skjult', false).gte('slut_eff', aarsstart()).order('start_ts').limit(1500),
+        () => sb.from('kk_events').select('*, kk_steder(navn,adresse)').in('status', ['godkendt', 'aflyst']).eq('skjult', false).gte('slut_eff', aarsstart()).order('start_ts').limit(1500));
     },
     async hentEvent(id) {
       return hentKategoriserede(
-        () => sb.from('kk_events').select('*, kk_event_kategorier(kategori)').eq('id', id).maybeSingle(),
-        () => sb.from('kk_events').select('*').eq('id', id).maybeSingle());
+        () => sb.from('kk_events').select('*, kk_steder(navn,adresse), kk_event_kategorier(kategori)').eq('id', id).maybeSingle(),
+        () => sb.from('kk_events').select('*, kk_steder(navn,adresse)').eq('id', id).maybeSingle());
     },
     async konflikter(a) {
       return ok(await sb.rpc('kk_konflikter', {
@@ -145,14 +151,14 @@ export function createApi(C) {
     // ---------- moderator ----------
     async hentModEvents() {
       const rows = await hentKategoriserede(
-        () => sb.from('kk_events').select('*, kk_kontakt(*), kk_event_kategorier(kategori)').order('start_ts').limit(3000),
-        () => sb.from('kk_events').select('*, kk_kontakt(*)').order('start_ts').limit(3000));
+        () => sb.from('kk_events').select('*, kk_kontakt(*), kk_steder(navn,adresse), kk_event_kategorier(kategori)').order('start_ts').limit(3000),
+        () => sb.from('kk_events').select('*, kk_kontakt(*), kk_steder(navn,adresse)').order('start_ts').limit(3000));
       return rows.map((r) => { const k = Array.isArray(r.kk_kontakt) ? r.kk_kontakt[0] : r.kk_kontakt; const { kk_kontakt, ...rest } = r; return { ...rest, kontakt: k || null }; });
     },
     async hentModEvent(id) {
       const r = await hentKategoriserede(
-        () => sb.from('kk_events').select('*, kk_kontakt(*), kk_event_kategorier(kategori)').eq('id', id).maybeSingle(),
-        () => sb.from('kk_events').select('*, kk_kontakt(*)').eq('id', id).maybeSingle());
+        () => sb.from('kk_events').select('*, kk_kontakt(*), kk_steder(navn,adresse), kk_event_kategorier(kategori)').eq('id', id).maybeSingle(),
+        () => sb.from('kk_events').select('*, kk_kontakt(*), kk_steder(navn,adresse)').eq('id', id).maybeSingle());
       if (!r) return null;
       const k = Array.isArray(r.kk_kontakt) ? r.kk_kontakt[0] : r.kk_kontakt;
       const { kk_kontakt, ...rest } = r;
