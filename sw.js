@@ -1,6 +1,6 @@
 // Service worker: hurtig opstart og offline-visning af selve appen.
 // VIGTIGT: Hæv VERSION, hver gang du uploader nye filer, så brugerne får opdateringen.
-const VERSION = 'kk-v10';
+const VERSION = 'kk-v11';
 const SKAL = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
   './js/app.js', './js/config.js', './js/util.js', './js/state.js', './js/ui.js',

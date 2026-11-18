@@ -90,18 +90,28 @@ function visInstallForslag() {
     try { localStorage.setItem('kk_pwa_install_udsat', String(Date.now() + 14 * 864e5)); } catch { /* privat tilstand */ }
     installBox.replaceChildren();
   };
-  const installer = h('button', { class: 'knap primær lille-knap', type: 'button', hidden: !deferredInstall, onclick: async () => {
-    if (!deferredInstall) return;
+  const instruktion = h('div', { class: 'install-guide', hidden: true },
+    h('ol', null, ...(ios
+      ? [h('li', null, 'Tryk på Del i Safari.'), h('li', null, 'Vælg “Føj til hjemmeskærm”.'), h('li', null, 'Tryk “Tilføj”.')]
+      : [h('li', null, 'Åbn browserens menu.'), h('li', null, 'Vælg “Installer app” eller “Føj til startskærm”.')])));
+  const installer = h('button', { class: 'knap primær lille-knap', type: 'button', onclick: async (e) => {
+    if (!deferredInstall) {
+      instruktion.hidden = !instruktion.hidden;
+      e.currentTarget.textContent = instruktion.hidden ? 'Tryk her for at tilføje' : 'Skjul vejledning';
+      return;
+    }
     deferredInstall.prompt();
     const valg = await deferredInstall.userChoice;
     deferredInstall = null;
     if (valg?.outcome === 'accepted') {
       installBox.replaceChildren();
     } else udsæt();
-  } }, 'Installér');
+  } }, 'Tryk her for at tilføje');
   clear(installBox).append(
-    h('div', { class: 'install-tekst' }, h('strong', null, 'Føj kalenderen til hjemmeskærmen'),
-      h('span', null, deferredInstall ? 'Så er kalenderen nem at åbne som en app.' : ios ? 'I Safari: tryk Del og vælg “Føj til hjemmeskærm”.' : 'Åbn browsermenuen, og vælg “Installer app” eller “Føj til startskærm”.')),
+    h('div', { class: 'install-indhold' },
+      h('div', { class: 'install-tekst' }, h('strong', null, 'Føj kalenderen til hjemmeskærmen'),
+        h('span', null, deferredInstall ? 'Så er kalenderen nem at åbne som en app.' : 'Tryk på knappen for at se, hvordan du gør.')),
+      instruktion),
     installer,
     h('button', { class: 'install-luk', type: 'button', 'aria-label': 'Ikke nu', onclick: udsæt }, '×'));
 }
