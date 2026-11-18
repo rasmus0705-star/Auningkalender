@@ -1,6 +1,7 @@
 // DEMO-tilstand: samme interface som api-supabase.js, men alt ligger i hukommelsen.
 // Bruges kun, mens config.js stadig har "DIT-PROJEKT". Intet gemmes permanent.
 import { addDays, cphToISO, dayKey, nyId, pad } from './util.js';
+import { standardBilledeUrl } from './standard-billeder.js';
 
 const KAT = [
   ['musik', 'Musik', '#7c3aed', '🎵'], ['foredrag', 'Foredrag', '#0369a1', '🎤'], ['boern-familie', 'Børn og familie', '#ea580c', '🧒'],
@@ -117,7 +118,7 @@ export function createApi(C) {
           ...resten, id: nyId(), start_ts: p.start, slut_ts: slut,
           slut_eff: slut || new Date(new Date(p.start).getTime() + 2 * 3600e3).toISOString(),
           status: rolle ? (ev.status || 'afventer') : 'afventer', skjult: false, afvisningsaarsag: null, flag: [], serie_id: serie,
-          billede_url: ev.billede_sti ? (this._billeder || {})[ev.billede_sti] : billede(k.farve, k.ikon, ids.length),
+          billede_url: ev.billede_sti?.startsWith('standard:') ? standardBilledeUrl(ev.billede_sti.slice('standard:'.length)) : ev.billede_sti ? (this._billeder || {})[ev.billede_sti] : billede(k.farve, k.ikon, ids.length),
           kontakt: kontakt && kontakt.navn ? kontakt : null, oprettet: new Date().toISOString(),
         };
         events.push(nyE); ids.push(nyE.id);
@@ -161,6 +162,7 @@ export function createApi(C) {
     },
     async gemKontakt(id, k) { const e = events.find((x) => x.id === id); if (e && k?.navn) e.kontakt = k; },
     async skiftBillede(id, gammel, blob) { const sti = await this.uploadBillede(blob); const e = events.find((x) => x.id === id); e.billede_sti = sti; e.billede_url = this._billeder[sti]; return sti; },
+    async skiftStandardBillede(id, _gammel, standardId) { const e = events.find((x) => x.id === id); e.billede_sti = `standard:${standardId}`; e.billede_url = standardBilledeUrl(standardId); },
     async fjernEventBillede(id) { const e = events.find((x) => x.id === id); e.billede_sti = null; e.billede_url = null; },
     async sletEvent(id) { events = events.filter((e) => e.id !== id); },
     async hentRoller() { return vent(roller); },

@@ -1,6 +1,7 @@
 // Supabase-implementering af data-laget. Resten af appen kender kun dette interface.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { cphToISO, nyId } from './util.js';
+import { standardBilledeUrl } from './standard-billeder.js';
 
 const BUCKET = 'kk-billeder';
 
@@ -11,7 +12,11 @@ export function createApi(C) {
 
   const ok = ({ data, error }) => { if (error) throw error; return data; };
   let kategoriTabelTilgaengelig = null;
-  const url = (sti) => (sti ? sb.storage.from(BUCKET).getPublicUrl(sti).data.publicUrl : null);
+  const url = (sti) => {
+    if (!sti) return null;
+    if (sti.startsWith('standard:')) return standardBilledeUrl(sti.slice('standard:'.length));
+    return sb.storage.from(BUCKET).getPublicUrl(sti).data.publicUrl;
+  };
   const med = (r) => ({ ...r, billede_url: url(r.billede_sti) });
   const medSted = (r) => {
     const relation = Array.isArray(r.kk_steder) ? r.kk_steder[0] : r.kk_steder;
@@ -64,7 +69,7 @@ export function createApi(C) {
     return (count || 0) > 0;
   }
   async function fjernBillede(sti, undtagenId) {
-    if (!sti) return;
+    if (!sti || sti.startsWith('standard:')) return;
     try { if (!(await billedeIBrug(sti, undtagenId))) await sb.storage.from(BUCKET).remove([sti]); } catch { /* ikke kritisk */ }
   }
   const brugerFra = (u) => (u ? { id: u.id, email: u.email || null, anonym: !!u.is_anonymous } : null);
@@ -180,6 +185,11 @@ export function createApi(C) {
       await fjernBillede(gammelSti, id);
       return sti;
     },
+    async skiftStandardBillede(id, gammelSti, standardId) {
+      const sti = `standard:${standardId}`;
+      ok(await sb.from('kk_events').update({ billede_sti: sti }).eq('id', id));
+      await fjernBillede(gammelSti, id);
+    },
     async fjernEventBillede(id, gammelSti) {
       ok(await sb.from('kk_events').update({ billede_sti: null }).eq('id', id));
       await fjernBillede(gammelSti, id);
@@ -227,7 +237,7 @@ export function createApi(C) {
     async sletBilleder(navne) { for (let i = 0; i < navne.length; i += 50) { const r = await sb.storage.from(BUCKET).remove(navne.slice(i, i + 50)); if (r.error) throw r.error; } },
     async hentGamle() { return ok(await sb.rpc('kk_gamle')); },
     async rydGamle(liste) {
-      const stier = [...new Set(liste.map((x) => x.billede_sti).filter(Boolean))];
+      const stier = [...new Set(liste.map((x) => x.billede_sti).filter((x) => x && !x.startsWith('standard:')))];
       for (let i = 0; i < stier.length; i += 50) await sb.storage.from(BUCKET).remove(stier.slice(i, i + 50));
       return ok(await sb.rpc('kk_slet_gamle'));
     },

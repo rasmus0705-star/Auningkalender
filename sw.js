@@ -1,12 +1,15 @@
 // Service worker: hurtig opstart og offline-visning af selve appen.
 // VIGTIGT: Hæv VERSION, hver gang du uploader nye filer, så brugerne får opdateringen.
-const VERSION = 'kk-v16';
+const VERSION = 'kk-v17';
 const SKAL = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
   './js/app.js', './js/config.js', './js/util.js', './js/state.js', './js/ui.js',
   './js/push.js', './js/api-supabase.js', './js/api-demo.js',
-  './js/view-home.js', './js/view-calendar.js', './js/view-event.js', './js/view-form.js', './js/view-mod.js', './js/view-text.js',
+  './js/view-home.js', './js/view-calendar.js', './js/view-event.js', './js/view-form.js', './js/view-mod.js', './js/view-text.js', './js/standard-billeder.js',
   './icons/favicon.svg', './icons/icon-192.png',
+  './images/standarder/musik.svg', './images/standarder/boern-leg.svg', './images/standarder/sport-motion.svg',
+  './images/standarder/marked-fest.svg', './images/standarder/teater.svg', './images/standarder/foredrag.svg',
+  './images/standarder/mad.svg', './images/standarder/natur.svg', './images/standarder/forening.svg', './images/standarder/andet.svg',
 ];
 
 self.addEventListener('install', (e) => {

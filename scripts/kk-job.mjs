@@ -30,6 +30,15 @@ function siteUrl() {
   return u.replace(/\/+$/, '') + '/';
 }
 const SITE = siteUrl();
+const STANDARD_BILLEDER = new Set(['musik', 'boern-leg', 'sport-motion', 'marked-fest', 'teater', 'foredrag', 'mad', 'natur', 'forening', 'andet']);
+const billedeUrl = (sti) => {
+  if (!sti) return `${SITE}icons/og-standard.png`;
+  if (sti.startsWith('standard:')) {
+    const id = sti.slice('standard:'.length);
+    return STANDARD_BILLEDER.has(id) ? `${SITE}images/standarder/${id}.svg` : `${SITE}icons/og-standard.png`;
+  }
+  return `${STORAGE}${sti}`;
+};
 
 // ---------- Database ----------
 const sslFra = /sslmode=disable/.test(DB) ? false : { rejectUnauthorized: false };
@@ -135,7 +144,7 @@ async function søgbareSider() {
     const aflyst = e.status === 'aflyst';
     const hv = hvornår(e);
     const url = `${SITE}d/${e.id}/`;
-    const billede = e.billede_sti ? `${STORAGE}${e.billede_sti}` : `${SITE}icons/og-standard.png`;
+    const billede = billedeUrl(e.billede_sti);
     const beskr = [aflyst ? 'Aflyst' : null, hv, sted, (e.pris_tekst || '').trim() || null].filter(Boolean).join(' · ') + (e.beskrivelse ? ` — ${kort(e.beskrivelse, 150)}` : '');
     const ogTitel = `${aflyst ? 'AFLYST: ' : ''}${e.titel}`;
     const titel = `${ogTitel} – ${lang(e.start_ts)}${sted ? ' – ' + sted : ''} | ${CONFIG.siteName}`;

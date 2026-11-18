@@ -248,6 +248,14 @@ textarea { resize: vertical; }
 .kat-radio input:checked + span { background: var(--c); border-color: var(--c); color: #fff; }
 .kat-radio input:focus-visible + span { outline: 3px solid color-mix(in srgb, var(--c) 50%, #fff); outline-offset: 2px; }
 .preview img { max-height: 200px; border-radius: var(--r-s); margin-bottom: .5rem; }
+.standardbilleder { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: .55rem; }
+.standardbillede { position: relative; display: grid; gap: .35rem; padding: .35rem; border: 1.5px solid var(--line); border-radius: var(--r-s); background: var(--surf); cursor: pointer; }
+.standardbillede:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.standardbillede input { position: absolute; z-index: 1; top: .55rem; right: .55rem; width: 20px; height: 20px; accent-color: var(--accent); }
+.standardbillede input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.standardbillede img, .standard-tomt { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 7px; }
+.standardbillede > span { padding: 0 .2rem .1rem; font-size: .8rem; font-weight: 650; line-height: 1.2; }
+.standard-tomt { display: grid; place-items: center; background: var(--surf2); color: var(--ink2); }
 .pris-række { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; }
 .pris-række input[type=text] { flex: 1 1 180px; width: auto; }
 .gentag { display: grid; gap: .7rem; padding: .8rem; background: var(--surf2); border-radius: var(--r-s); }

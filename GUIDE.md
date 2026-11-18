@@ -134,12 +134,13 @@ Hvis du senere ændrer webadressen, skal både `SITE_URL` og `allowedOrigins` ø
 ## 5. Daglig brug
 
 - **Afventer**: godkend med ét tryk, afvis med årsag, eller ret. *Godkend alle uden advarsler* tager de rene indsendelser. Røde mærker (fx *mange links*, *ordliste: casino*, *mulig dublet*) betyder, at du bør kigge efter.
-- **Nyt arrangement** (som moderator): udgives med det samme. Her kan du også sætte **gentagelser** (ugentligt, hver 2. uge, første torsdag i måneden m.m.). *Dupliker* kopierer et eksisterende arrangement.
+- **Nyt arrangement** (som moderator): udgives med det samme. Vælg et af standardmotiverne, hvis du ikke har et billede, eller upload dit eget. Her kan du også sætte **gentagelser** (ugentligt, hver 2. uge, første torsdag i måneden m.m.). *Dupliker* kopierer et eksisterende arrangement.
 - **Aflys** viser arrangementet som aflyst. **Skjul** fjerner det midlertidigt.
 - **Steder** (moderator og admin) og **Indhold** (admin): kategorier, målgrupper, områder, afvisningsårsager og ordliste kan rettes uden kode.
 - Opret kategorier under **Moderator → Indhold → Kategorier**. Skriv en kort unik kode (fx `film-og-teater`), navn, ikon og farve, og tryk **Tilføj**. Arrangører kan vælge flere kategorier ved indsendelse. Moderatorer og admins kan bagefter rette hovedkategori og ekstra kategorier; filtre og notifikationer bruger alle valgte kategorier.
 - Sted er valgfrit ved indsendelse. Moderatorer og admins kan tilføje eller ændre det senere via arrangementets redigering.
 - Sluttidspunkt er valgfrit. Markér **Arrangementet har intet sluttidspunkt**, hvis arrangementet ikke har et fast sluttidspunkt; slutdatoen kan stadig udfyldes, hvis det varer flere dage.
+- Ved oprettelse kan arrangøren vælge et standardmotiv som musik, børn og leg, sport, teater eller natur i stedet for at uploade sit eget billede.
 - Konfliktcheck i formularen advarer om samme sted/tid (rød), samtidige arrangementer (gul) og andet samme dag (blå).
 
 ### Rettelser fra arrangører (rettelink)

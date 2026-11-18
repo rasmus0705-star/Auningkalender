@@ -2,6 +2,7 @@
 import { CONFIG } from './config.js';
 import { h, icon, clear, cphToISO, dayKey, addDays, dowOf, dageIMaaned, pad, tidTekst, debounce, toast, formindskBillede, captcha, fmt, kapitaliser } from './util.js';
 import { S, maalgruppeNavn, gemRet, rettelinkUrl } from './state.js';
+import { STANDARD_BILLEDER, standardBilledeUrl } from './standard-billeder.js';
 
 const emailOk = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s);
 const dageMellem = (a, b) => Math.round((Date.UTC(...b.split('-').map((x, i) => (i === 1 ? +x - 1 : +x))) - Date.UTC(...a.split('-').map((x, i) => (i === 1 ? +x - 1 : +x)))) / 864e5);
@@ -44,10 +45,38 @@ export async function visForm(root, { id, kopi, token } = {}) {
   const billedeInput = inp('billede', 'file', { accept: 'image/*' });
   const preview = h('div', { class: 'preview' });
   let fjernBillede = false;
-  if (e0.billede_url) preview.append(h('img', { src: e0.billede_url, alt: 'Nuværende billede' }), redigér ? h('button', { type: 'button', class: 'knap sekundær lille-knap', onclick: (ev) => { fjernBillede = true; clear(preview); ev.target.remove(); } }, 'Fjern billede') : null);
+  const eksisterendeStandard = e0.billede_sti?.startsWith('standard:') ? e0.billede_sti.slice('standard:'.length) : '';
+  function fjernBilledeFraForm(ev) {
+    fjernBillede = true;
+    form.querySelectorAll('input[name="billede_standard"]').forEach((x) => { x.checked = false; });
+    clear(preview); ev.currentTarget.remove();
+  }
+  function visBilledePreview(src, alt = 'Forhåndsvisning') {
+    clear(preview);
+    preview.append(h('img', { src, alt }), redigér ? h('button', { type: 'button', class: 'knap sekundær lille-knap', onclick: fjernBilledeFraForm }, 'Fjern billede') : null);
+  }
+  if (e0.billede_url) visBilledePreview(e0.billede_url, 'Nuværende billede');
+  const udenStandard = h('label', { class: 'standardbillede standard-uden' },
+    h('input', { type: 'radio', name: 'billede_standard', value: '', checked: !eksisterendeStandard, onchange: () => {
+      billedeInput.value = '';
+      if (eksisterendeStandard) { fjernBillede = true; clear(preview); }
+      else { fjernBillede = false; if (e0.billede_url) visBilledePreview(e0.billede_url, 'Nuværende billede'); else clear(preview); }
+    } }),
+    h('div', { class: 'standard-tomt' }, icon('cal', 30)), h('span', null, 'Intet standardmotiv'));
+  const billedGalleri = h('div', { class: 'standardbilleder', role: 'group', 'aria-label': 'Vælg et standardmotiv' }, udenStandard, ...STANDARD_BILLEDER.map((b) =>
+    h('label', { class: 'standardbillede' },
+      h('input', { type: 'radio', name: 'billede_standard', value: b.id, checked: eksisterendeStandard === b.id, onchange: () => {
+        billedeInput.value = '';
+        fjernBillede = false;
+        visBilledePreview(standardBilledeUrl(b.id), `Standardmotiv: ${b.navn}`);
+      } }),
+      h('img', { src: standardBilledeUrl(b.id), alt: '', loading: 'lazy' }), h('span', null, b.navn))));
   billedeInput.addEventListener('change', () => {
     const f = billedeInput.files[0]; clear(preview); fjernBillede = false;
-    if (f) preview.append(h('img', { src: URL.createObjectURL(f), alt: 'Forhåndsvisning' }));
+    if (f) {
+      form.querySelectorAll('input[name="billede_standard"]').forEach((x) => { x.checked = false; });
+      visBilledePreview(URL.createObjectURL(f));
+    }
   });
 
   // ---------- 2. Hvornår ----------
@@ -112,7 +141,10 @@ export async function visForm(root, { id, kopi, token } = {}) {
           h('small', { class: 'hint' }, mod ? 'Vælg de kategorier, der passer. Du kan fjerne dem igen senere.' : 'Vælg gerne flere, hvis arrangementet passer til flere kategorier. En moderator gennemgår dem.')) : null,
         h('div', { class: 'fejl', id: 'fejl-kategori', role: 'alert' })),
       felt('Beskrivelse', beskr, { navn: 'beskrivelse', hint: 'Skriv gerne hvem det er for, om der er tilmelding, og hvad man skal medbringe.' }),
-      ...(ret ? [] : [felt('Billede', billedeInput, { navn: 'billede', hint: 'Valgfrit. Brug gerne et liggende billede. Det formindskes automatisk.' }), preview])),
+      ...(ret ? [] : [
+        felt('Vælg et standardmotiv (valgfrit)', billedGalleri, { navn: 'billede-standard', hint: 'Vælg fx musik, børn og leg, sport eller natur.' }),
+        felt('Eget billede (valgfrit)', billedeInput, { navn: 'billede', hint: 'Et eget billede erstatter standardmotivet. Det formindskes automatisk.' }), preview,
+      ])),
     sektion(2, 'Hvornår?',
       h('div', { class: 'række' },
         felt('Startdato', dato('startdato', sd0, mod || ret ? undefined : idag), { navn: 'startdato', krav: true }), felt('Starttid', tid('starttid', e0.start_ts && !kopi ? tidTekst(e0.start_ts) : (kopi ? tidTekst(e0.start_ts) : '')), { navn: 'starttid', krav: true })),
@@ -311,7 +343,9 @@ export async function visForm(root, { id, kopi, token } = {}) {
       if (redigér) {
         await S.api.opdaterEvent(id, { ...fælles, start_ts: t.start, slut_ts: t.slut, status: g('status') || e0.status });
         await S.api.gemKontakt(id, kontakt);
-        if (blob) await S.api.skiftBillede(id, e0.billede_sti, blob); else if (fjernBillede) await S.api.fjernEventBillede(id, e0.billede_sti);
+        if (blob) await S.api.skiftBillede(id, e0.billede_sti, blob);
+        else if (g('billede_standard')) await S.api.skiftStandardBillede(id, e0.billede_sti, g('billede_standard'));
+        else if (fjernBillede) await S.api.fjernEventBillede(id, e0.billede_sti);
         toast('Ændringer gemt', 'ok');
         S.hentetTid = 0;
         location.hash = '#/mod';
@@ -331,7 +365,7 @@ export async function visForm(root, { id, kopi, token } = {}) {
       }
       const ps = perioder(t);
       if (!ps.length) { visFejl({ gentagtil: 'Vælg slutdato for gentagelsen.' }); knap.disabled = false; knap.textContent = 'Opret'; return; }
-      const billede_sti = blob ? await S.api.uploadBillede(blob) : null;
+      const billede_sti = blob ? await S.api.uploadBillede(blob) : g('billede_standard') ? `standard:${g('billede_standard')}` : null;
       const ids = await S.api.opret({ ...fælles, billede_sti, status: mod ? (g('status') || 'godkendt') : 'afventer', perioder: ps }, kontakt);
       S.hentetTid = 0;
       let retUrl = null;
