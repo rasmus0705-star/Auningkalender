@@ -330,6 +330,12 @@ dialog.dialog h2 { margin-top: 0; }
 .toast.fejl { background: #991b1b; }
 .toast.ud { opacity: 0; transition: opacity .3s; }
 @keyframes ind { from { opacity: 0; transform: translateY(8px); } }
+.install-tilbud:not(:empty) { position: fixed; z-index: 50; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(620px, calc(100vw - 1rem)); display: flex; align-items: center; gap: .7rem; padding: .8rem; border: 1px solid var(--line); border-radius: var(--r); background: var(--surf); color: var(--ink); box-shadow: var(--skygge-h); }
+.install-tekst { display: grid; gap: .15rem; flex: 1; font-size: .85rem; line-height: 1.35; }
+.install-tekst span { color: var(--ink2); }
+.install-luk { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--surf2); color: var(--ink2); font: inherit; font-size: 1.35rem; cursor: pointer; }
+@media (min-width: 820px) { .install-tilbud:not(:empty) { bottom: 24px; } }
+@media (max-width: 420px) { .install-tilbud:not(:empty) { flex-wrap: wrap; } .install-tekst { flex-basis: 100%; } }
 
 /* ----- tekstsider ----- */
 .tekstside { max-width: 70ch; }

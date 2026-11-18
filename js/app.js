@@ -23,7 +23,20 @@ const RUTER = [
 ];
 const TITLER = { hjem: 'Arrangementer', kalender: 'Kalender', opret: 'Opret arrangement', mod: 'Moderator', om: 'Om' };
 
-let main, nav, tabbar;
+let main, nav, tabbar, installBox;
+let deferredInstall = null;
+let installOfferReady = false;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstall = e;
+  if (installOfferReady) visInstallForslag();
+});
+window.addEventListener('appinstalled', () => {
+  try { localStorage.setItem('kk_pwa_installeret', '1'); } catch { /* privat tilstand */ }
+  deferredInstall = null;
+  installBox?.replaceChildren();
+});
 
 async function start() {
   document.documentElement.style.setProperty('--accent', CONFIG.farveAccent);
@@ -51,10 +64,46 @@ async function start() {
   }
   bygLayout(app);
   window.addEventListener('hashchange', rut);
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installPrompt = e; });
   rut();
   opfriskPush();
+  installBox = h('aside', { class: 'install-tilbud', 'aria-label': 'Installér kalenderen' });
+  app.append(installBox);
+  installOfferReady = true;
+  setTimeout(visInstallForslag, 3500);
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+function visInstallForslag() {
+  if (!installBox) return;
+  const standalone = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+  let alleredeInstalleret = false, udsatTil = 0;
+  try {
+    alleredeInstalleret = localStorage.getItem('kk_pwa_installeret') === '1';
+    udsatTil = Number(localStorage.getItem('kk_pwa_install_udsat') || 0);
+  } catch { /* privat tilstand */ }
+  if (standalone || alleredeInstalleret || Date.now() < udsatTil) return;
+
+  const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const mobil = ios || /Android/i.test(navigator.userAgent);
+  if (!deferredInstall && !mobil) return;
+  const udsæt = () => {
+    try { localStorage.setItem('kk_pwa_install_udsat', String(Date.now() + 14 * 864e5)); } catch { /* privat tilstand */ }
+    installBox.replaceChildren();
+  };
+  const installer = h('button', { class: 'knap primær lille-knap', type: 'button', hidden: !deferredInstall, onclick: async () => {
+    if (!deferredInstall) return;
+    deferredInstall.prompt();
+    const valg = await deferredInstall.userChoice;
+    deferredInstall = null;
+    if (valg?.outcome === 'accepted') {
+      installBox.replaceChildren();
+    } else udsæt();
+  } }, 'Installér');
+  clear(installBox).append(
+    h('div', { class: 'install-tekst' }, h('strong', null, 'Føj kalenderen til hjemmeskærmen'),
+      h('span', null, deferredInstall ? 'Så er kalenderen nem at åbne som en app.' : ios ? 'I Safari: tryk Del og vælg “Føj til hjemmeskærm”.' : 'Åbn browsermenuen, og vælg “Installer app” eller “Føj til startskærm”.')),
+    installer,
+    h('button', { class: 'install-luk', type: 'button', 'aria-label': 'Ikke nu', onclick: udsæt }, '×'));
 }
 
 function bygLayout(app) {
