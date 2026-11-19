@@ -44,8 +44,8 @@ export function eventKort(ev, { kompakt = false } = {}) {
   return h('article', { class: 'kort' + (kompakt ? ' kompakt' : '') + (aflyst ? ' aflyst' : ''), style: `--c:${k.farve}` },
     h('div', { class: 'kort-media' },
       media(ev),
-      h('span', { class: 'datobadge' }, h('b', null, fmt.dagNr(ev._start)), h('i', null, fmt.maanedKort(ev._start))),
-      aflyst ? h('span', { class: 'aflyst-bånd' }, 'AFLYST') : null),
+      h('span', { class: 'datobadge' }, h('b', null, fmt.dagNr(ev._start)), h('i', null, fmt.maanedKort(ev._start)))),
+    aflyst ? h('span', { class: 'aflyst-bånd', 'aria-label': 'Arrangementet er aflyst' }, 'AFLYST') : null,
     h('div', { class: 'kort-krop' },
       h('div', { class: 'kort-meta' }, katPiller(ev), pris ? h('span', { class: 'pris' }, pris) : null),
       h('h3', null, h('a', { class: 'kort-link', href: `#/event/${ev.id}` }, ev.titel)),
@@ -91,36 +91,59 @@ export function kategoriChips(onChange) {
 export function filterBar(onChange, { periode = true, ekstra = true } = {}) {
   const f = S.filter;
   const søg = h('input', { type: 'search', placeholder: 'Søg i arrangementer …', value: f.q, 'aria-label': 'Søg', class: 'søg-input' });
-  let t; søg.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { f.q = søg.value; onChange(); }, 200); });
+  const nulstil = h('button', { type: 'button', class: 'knap sekundær lille-knap', hidden: true, onclick: () => {
+    nulstilFilter();
+    søg.value = '';
+    if (periode) tegnPeriode();
+    tegnKategorier();
+    if (ekstra) {
+      mg.value = ''; omraade.value = ''; gratis.checked = false; mine.checked = false;
+      flere.open = false;
+    }
+    opdaterNulstil(); onChange();
+  } }, 'Ryd filtre');
+  const opdaterNulstil = () => { nulstil.hidden = !filterAktivt(); };
+  const skift = () => { opdaterNulstil(); onChange(); };
+  let t; søg.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { f.q = søg.value; skift(); }, 200); });
 
   const periodeRække = h('div', { class: 'segment', role: 'group', 'aria-label': 'Periode' });
   const tegnPeriode = () => periodeRække.replaceChildren(...PERIODER.map(([v, t]) => h('button', {
     type: 'button', class: v === f.periode ? 'på' : '', 'aria-pressed': v === f.periode ? 'true' : 'false',
-    onclick: () => { f.periode = v; tegnPeriode(); onChange(); },
+    onclick: () => { f.periode = v; tegnPeriode(); skift(); },
   }, t)));
   tegnPeriode();
 
-  const sel = (id, label, valg, værdi, set) => h('label', { class: 'felt-kompakt' }, label,
-    h('select', { id, onchange: (e) => { set(e.target.value); onChange(); }, value: værdi }, h('option', { value: '' }, 'Alle'), valg.map((v) => h('option', { value: v.slug }, v.navn))));
-  const chk = (label, ok, set) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: ok, onchange: (e) => { set(e.target.checked); onChange(); } }), label);
+  const kategorier = h('div', { class: 'chips', role: 'group', 'aria-label': 'Kategorier' });
+  // Kategorichips tegnes lokalt, så reset-knappen også kan nulstille deres valgte tilstand.
+  const tegnKategorier = () => kategorier.replaceChildren(...S.stam.kategorier.map((k) => h('button', {
+    type: 'button', class: 'chip' + (f.kat.has(k.slug) ? ' på' : ''), style: `--c:${k.farve}`, 'aria-pressed': f.kat.has(k.slug) ? 'true' : 'false',
+    onclick: () => { if (f.kat.has(k.slug)) f.kat.delete(k.slug); else f.kat.add(k.slug); tegnKategorier(); skift(); },
+  }, h('span', { 'aria-hidden': 'true' }, k.ikon), ' ', k.navn)));
+  tegnKategorier();
+
+  const mg = h('select', { id: 'f-mg', onchange: (e) => { f.maalgruppe = e.target.value; skift(); }, value: f.maalgruppe }, h('option', { value: '' }, 'Alle'), S.stam.maalgrupper.map((v) => h('option', { value: v.slug }, v.navn)));
+  const omraade = h('select', { id: 'f-om', onchange: (e) => { f.omraade = e.target.value; skift(); }, value: f.omraade }, h('option', { value: '' }, 'Alle'), S.stam.omraader.map((v) => h('option', { value: v.slug }, v.navn)));
+  const gratis = h('input', { type: 'checkbox', checked: f.gratis, onchange: (e) => { f.gratis = e.target.checked; skift(); } });
+  const mine = h('input', { type: 'checkbox', checked: f.mine, onchange: (e) => { f.mine = e.target.checked; skift(); } });
 
   const flere = ekstra ? h('details', { class: 'flere', open: !!(f.maalgruppe || f.omraade || f.gratis || f.mine) },
     h('summary', null, 'Flere filtre'),
     h('div', { class: 'flere-grid' },
-      sel('f-mg', 'Målgruppe', S.stam.maalgrupper, f.maalgruppe, (v) => { f.maalgruppe = v; }),
-      sel('f-om', 'Område', S.stam.omraader, f.omraade, (v) => { f.omraade = v; }),
-      chk('Kun gratis', f.gratis, (v) => { f.gratis = v; }),
-      chk('Kun mine ★', f.mine, (v) => { f.mine = v; }))) : null;
+      h('label', { class: 'felt-kompakt' }, 'Målgruppe', mg),
+      h('label', { class: 'felt-kompakt' }, 'Område', omraade),
+      h('label', { class: 'check' }, gratis, 'Kun gratis'),
+      h('label', { class: 'check' }, mine, 'Kun mine ★'))) : null;
 
   return h('section', { class: 'filterbar', 'aria-label': 'Filtre' },
     h('div', { class: 'søg' }, icon('search', 18), søg),
     periode ? periodeRække : null,
-    kategoriChips(onChange),
-    flere);
+    kategorier,
+    flere,
+    nulstil);
 }
 
 export function nulstilFilter() {
-  S.filter = { periode: 'alle', kat: new Set(), maalgruppe: '', omraade: '', gratis: false, mine: false, q: '' };
+  Object.assign(S.filter, { periode: 'alle', kat: new Set(), maalgruppe: '', omraade: '', gratis: false, mine: false, q: '' });
 }
 export const filterAktivt = () => { const f = S.filter; return f.periode !== 'alle' || f.kat.size || f.maalgruppe || f.omraade || f.gratis || f.mine || f.q.trim(); };
 

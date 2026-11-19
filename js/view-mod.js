@@ -123,7 +123,7 @@ async function visDashboard(root) {
     const nu = new Date();
     switch (f) {
       case 'afventer': return e.status === 'afventer';
-      case 'kommende': return e.status === 'godkendt' && e._slutEff >= nu;
+      case 'kommende': return (e.status === 'godkendt' || e.status === 'aflyst') && e._slutEff >= nu;
       case 'kladde': return e.status === 'kladde';
       case 'lukket': return (e.status === 'afvist' || e.status === 'aflyst') && e._slutEff >= nu;
       case 'arkiv': return e._slutEff < nu;

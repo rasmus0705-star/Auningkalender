@@ -58,6 +58,18 @@ export async function visEvent(root, id) {
       h('a', { href: googleKalenderUrl(ev, url), target: '_blank', rel: 'noopener' }, 'Google Kalender'),
       h('button', { type: 'button', onclick: () => hentIcsFil(ev, url) }, 'Apple / Outlook (.ics-fil)')));
 
+  const moderatorKnapper = S.rolle ? h('div', { class: 'moderator-event-knapper' },
+    h('a', { class: 'knap sekundær', href: `#/ret/${ev.id}` }, icon('edit', 18), ' Ret arrangement'),
+    ev.status === 'godkendt' || ev.status === 'aflyst' ? h('button', { type: 'button', class: `knap ${aflyst ? 'sekundær' : 'fare-lys'}`, onclick: async () => {
+      const nyStatus = aflyst ? 'godkendt' : 'aflyst';
+      try {
+        await S.api.opdaterEvent(ev.id, { status: nyStatus });
+        S.hentetTid = 0;
+        toast(aflyst ? 'Arrangementet er genåbnet' : 'Arrangementet er aflyst', 'ok');
+        await visEvent(root, id);
+      } catch (e) { toast(e.message || 'Kunne ikke ændre status', 'fejl'); }
+    } }, icon(aflyst ? 'check' : 'alert', 18), aflyst ? ' Genåbn' : ' Aflys') : null) : null;
+
   const kort = (sted?.lat != null && sted?.lon != null) ? kortElement(sted) : null;
   const findVej = (stedTekst || adresse) ? h('a', { class: 'knap sekundær', target: '_blank', rel: 'noopener', href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([stedTekst, adresse, 'Auning'].filter(Boolean).join(', ')) }, icon('pin', 18), ' Find vej') : null;
 
@@ -68,6 +80,7 @@ export async function visEvent(root, id) {
       venter ? h('div', { class: 'banner', role: 'status' }, icon('eye', 16), ev.status === 'afventer' ? 'Dette arrangement afventer godkendelse og er ikke offentligt endnu.' : `Status: ${ev.status}`) : null,
       h('header', { class: 'event-hoved' }, h('div', { class: 'kort-meta' }, katPiller(ev)), h('h1', null, ev.titel), ev.arrangoer ? h('p', { class: 'arrangoer' }, 'Arrangør: ', h('b', null, ev.arrangoer)) : null),
       h('div', { class: 'event-knapper' }, favB, kalender, del, hentRet(ev.id) ? h('a', { class: 'knap sekundær', href: `#/rettelse/${hentRet(ev.id)}` }, icon('edit', 18), ' Foreslå rettelse') : null, ev.link_url ? h('a', { class: 'knap primær', href: ev.link_url, target: '_blank', rel: 'noopener noreferrer nofollow' }, icon('ext', 18), ' Mere info / tilmelding') : null),
+      moderatorKnapper,
       pushTip,
       h('div', { class: 'event-krop' },
         h('div', { class: 'event-info' },

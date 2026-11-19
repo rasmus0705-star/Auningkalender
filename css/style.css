@@ -87,6 +87,16 @@ textarea { resize: vertical; }
 .intro { margin-bottom: 1.2rem; }
 .intro p { color: var(--ink2); font-size: 1.05rem; margin: 0; }
 .intro.lille { margin-bottom: .8rem; }
+.hurtigvalg { display: grid; gap: .45rem; margin: -.25rem 0 1rem; }
+.hurtigvalg-label { color: var(--ink2); font-size: .82rem; font-weight: 750; }
+.hurtigvalg-knapper { display: flex; flex-wrap: wrap; gap: .45rem; }
+.hurtigvalg-knap { border: 1.5px solid var(--line); background: var(--surf); color: var(--ink); font: inherit; font-weight: 700; font-size: .88rem; padding: .48rem .85rem; border-radius: 999px; cursor: pointer; transition: background-color .15s, color .15s, border-color .15s; }
+.hurtigvalg-knap:hover { border-color: var(--accent); }
+.hurtigvalg-knap[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.hurtigvalg-knap:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
+.hero { animation: hurtig-visning .18s ease-out both; }
+@keyframes hurtig-visning { from { opacity: .65; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .hero { animation: none; } .hurtigvalg-knap { transition: none; } }
 .hero { position: relative; display: block; border-radius: calc(var(--r) + 6px); overflow: hidden; margin: 0 0 1.4rem; min-height: 280px; color: #fff; text-decoration: none; box-shadow: var(--skygge); isolation: isolate; }
 .hero .hero-media, .hero .media { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
 .hero-skygge { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .05) 0%, rgba(0, 0, 0, .35) 45%, rgba(0, 0, 0, .8) 100%); }
@@ -144,7 +154,7 @@ textarea { resize: vertical; }
 .datobadge i { font-style: normal; font-size: .66rem; text-transform: uppercase; font-weight: 750; letter-spacing: .05em; color: var(--c); }
 .fav { position: absolute; right: 8px; top: 8px; z-index: 3; width: 36px; height: 36px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--surf) 88%, transparent); color: var(--ink2); display: grid; place-items: center; cursor: pointer; }
 .fav[aria-pressed=true] { color: #f4b400; }
-.aflyst-bånd { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; background: var(--rød); color: #fff; text-align: center; font-size: .7rem; font-weight: 800; letter-spacing: .12em; padding: .15rem; }
+.aflyst-bånd { position: absolute; z-index: 4; left: 0; right: 0; top: 50%; transform: translateY(-50%); background: var(--grøn); color: #fff; text-align: center; font-size: .85rem; font-weight: 850; letter-spacing: .16em; padding: .45rem .6rem; pointer-events: none; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); }
 .kort.aflyst h3, .kort.aflyst .kort-linje { text-decoration: line-through; opacity: .65; }
 @media (min-width: 640px) {
   .kort:not(.kompakt) { grid-template-columns: 1fr; }
@@ -205,6 +215,7 @@ textarea { resize: vertical; }
 .event-hoved h1 { margin: .45rem 0 .4rem; text-wrap: balance; }
 .arrangoer { color: var(--ink2); margin: 0; }
 .event-knapper { display: flex; flex-wrap: wrap; gap: .55rem; margin-bottom: 1.4rem; }
+.moderator-event-knapper { display: flex; flex-wrap: wrap; gap: .55rem; margin: -.7rem 0 1.4rem; padding: .75rem; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--surf2); }
 .drop { position: relative; }
 .drop summary { list-style: none; }
 .drop summary::-webkit-details-marker { display: none; }
@@ -264,6 +275,8 @@ textarea { resize: vertical; }
 .samtykke { align-items: flex-start; }
 .samtykke input { margin-top: .25rem; }
 .form-knapper { display: flex; gap: .7rem; flex-wrap: wrap; }
+.rediger-form { padding-bottom: 5.5rem; }
+.rediger-form .form-knapper { position: fixed; z-index: 50; left: 0; right: 0; bottom: 0; justify-content: center; padding: .7rem 1rem calc(.7rem + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 94%, transparent); border-top: 1px solid var(--line); box-shadow: 0 -3px 14px rgba(0, 0, 0, .12); backdrop-filter: saturate(1.4) blur(14px); }
 .konflikt { display: grid; gap: .5rem; }
 .konf, .konf-hint { border-radius: var(--r-s); padding: .65rem .85rem; font-size: .9rem; }
 .konf strong { display: flex; align-items: center; gap: .4rem; margin-bottom: .2rem; }

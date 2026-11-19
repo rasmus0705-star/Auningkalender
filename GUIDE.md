@@ -138,7 +138,7 @@ Hvis du senere ændrer webadressen, skal både `SITE_URL` og `allowedOrigins` ø
 - **Aflys** viser arrangementet som aflyst. **Skjul** fjerner det midlertidigt.
 - **Steder** (moderator og admin) og **Indhold** (admin): kategorier, målgrupper, områder, afvisningsårsager og ordliste kan rettes uden kode.
 - Opret kategorier under **Moderator → Indhold → Kategorier**. Skriv en kort unik kode (fx `film-og-teater`), navn, ikon og farve, og tryk **Tilføj**. Arrangører kan vælge flere kategorier ved indsendelse. Moderatorer og admins kan bagefter rette hovedkategori og ekstra kategorier; filtre og notifikationer bruger alle valgte kategorier.
-- Sted er valgfrit ved indsendelse. Moderatorer og admins kan tilføje eller ændre det senere via arrangementets redigering.
+- Sted er valgfrit ved indsendelse. Vælg et sted fra listen, eller vælg **Skriv et andet sted …** for selv at indtaste stedets navn og evt. adresse. Moderatorer og admins kan tilføje eller ændre det senere via arrangementets redigering.
 - Sluttidspunkt er valgfrit. Markér **Arrangementet har intet sluttidspunkt**, hvis arrangementet ikke har et fast sluttidspunkt; slutdatoen kan stadig udfyldes, hvis det varer flere dage.
 - Ved oprettelse kan arrangøren vælge et standardmotiv som musik, børn og leg, sport, teater eller natur i stedet for at uploade sit eget billede.
 - Konfliktcheck i formularen advarer om samme sted/tid (rød), samtidige arrangementer (gul) og andet samme dag (blå).

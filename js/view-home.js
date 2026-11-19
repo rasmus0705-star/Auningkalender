@@ -5,13 +5,23 @@ import { S, sikrData, filtrer, kat } from './state.js';
 import { eventKort, filterBar, skeletter, tomtState, dagOverskrift, katPille, media, nulstilFilter, filterAktivt } from './ui.js';
 
 export async function visHjem(root) {
+  let hurtigvalg = 'alle';
   const liste = h('div', { class: 'liste', 'aria-live': 'polite' }, skeletter(4));
   const heroBox = h('div');
   const advarsel = h('div');
+  const hurtigBar = h('section', { class: 'hurtigvalg', 'aria-label': 'Hurtige valg' });
+  const hurtigKnapper = [['alle', 'Alle'], ['idag', 'I dag'], ['weekend', 'I weekenden'], ['boern', 'For børn'], ['gratis', 'Gratis']];
+  const tegnHurtigvalg = () => hurtigBar.replaceChildren(
+    h('span', { class: 'hurtigvalg-label' }, 'Find hurtigt'),
+    h('div', { class: 'hurtigvalg-knapper', role: 'group', 'aria-label': 'Vis arrangementer' }, hurtigKnapper.map(([vaerdi, tekst]) => h('button', {
+      type: 'button', class: 'hurtigvalg-knap', 'aria-pressed': hurtigvalg === vaerdi ? 'true' : 'false',
+      onclick: () => { hurtigvalg = vaerdi; tegnHurtigvalg(); tegn(); },
+    }, tekst))));
+  tegnHurtigvalg();
   const bar = filterBar(tegn);
   root.append(
     h('section', { class: 'intro' }, h('h1', null, CONFIG.tagline), h('p', null, `Alle arrangementer i ${CONFIG.omraadeTekst} samlet ét sted.`)),
-    advarsel, heroBox, bar, liste);
+    hurtigBar, advarsel, heroBox, bar, liste);
 
   try { await sikrData(); } catch (e) {
     clear(liste).append(tomtState('Kunne ikke hente arrangementer', 'Tjek din internetforbindelse og prøv igen.', h('button', { class: 'knap primær', onclick: () => location.reload() }, 'Prøv igen')));
@@ -23,14 +33,21 @@ export async function visHjem(root) {
     if (S.offline) clear(advarsel).append(h('div', { class: 'banner', role: 'status' }, icon('alert', 16), 'Du er offline – viser sidst hentede arrangementer.'));
     else clear(advarsel);
 
-    const alle = filtrer(S.events);
+    const grundliste = filtrer(S.events);
+    const alle = grundliste.filter((e) => {
+      if (hurtigvalg === 'idag') return e._startDag <= dayKey(new Date()) && e._slutDag >= dayKey(new Date());
+      if (hurtigvalg === 'weekend') return e._startDag <= weekendSlut() && e._slutDag >= weekendStart();
+      if (hurtigvalg === 'boern') return e.maalgruppe === 'boern' || e.maalgruppe === 'alle' || [e.kategori, ...(e.kategorier || [])].includes('boern-familie');
+      if (hurtigvalg === 'gratis') return /^(gratis|fri|0)/i.test(e.pris_tekst || '');
+      return true;
+    });
     clear(heroBox);
-    if (!filterAktivt() && alle.length) heroBox.append(hero(alle));
+    if (alle.length) heroBox.append(hero(alle));
 
     clear(liste);
     if (!alle.length) {
-      liste.append(filterAktivt()
-        ? tomtState('Ingen arrangementer matcher', 'Prøv at fjerne et filter eller søge på noget andet.', h('button', { class: 'knap sekundær', onclick: () => { nulstilFilter(); location.hash = '#/'; visIgen(); } }, 'Ryd filtre'))
+      liste.append(filterAktivt() || hurtigvalg !== 'alle'
+        ? tomtState('Ingen arrangementer matcher', 'Prøv et andet hurtigt valg, eller ryd dine filtre.', h('button', { class: 'knap sekundær', onclick: () => { nulstilFilter(); hurtigvalg = 'alle'; tegnHurtigvalg(); tegn(); } }, 'Vis alle arrangementer'))
         : tomtState('Ingen kommende arrangementer endnu', 'Vær den første til at oprette et arrangement.', h('a', { class: 'knap primær', href: '#/opret' }, 'Opret arrangement')));
       return;
     }
@@ -48,7 +65,23 @@ export async function visHjem(root) {
     }
     liste.append(gitter);
   }
-  function visIgen() { root.replaceChildren(); visHjem(root); }
+}
+
+function weekendStart() {
+  const idag = dayKey(new Date());
+  const dow = (new Date(`${idag}T12:00:00Z`).getUTCDay() + 6) % 7;
+  if (dow >= 5) return idag;
+  const dageTilLoerdag = 5 - dow;
+  const d = new Date(`${idag}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dageTilLoerdag);
+  return d.toISOString().slice(0, 10);
+}
+
+function weekendSlut() {
+  const start = weekendStart();
+  const d = new Date(`${start}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
 }
 
 function hero(alle) {

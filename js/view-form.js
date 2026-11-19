@@ -24,7 +24,7 @@ export async function visForm(root, { id, kopi, token } = {}) {
   }
   const e0 = eks || {};
   const k0 = e0.kontakt || {};
-  const form = h('form', { class: 'form', novalidate: true, autocomplete: 'off' });
+  const form = h('form', { class: `form${redigér ? ' rediger-form' : ''}`, novalidate: true, autocomplete: 'off' });
   const g = (n) => (form.elements[n]?.value || '').trim();
 
   // ---------- byggeklodser ----------
@@ -104,9 +104,9 @@ export async function visForm(root, { id, kopi, token } = {}) {
   const omrSel = h('select', { id: 'f-omraade', name: 'omraade' }, S.stam.omraader.map((o) => h('option', { value: o.slug, selected: (e0.omraade || CONFIG.defaultOmraade) === o.slug }, o.navn)));
   const harSted = e0.sted_id || !e0.sted_navn;
   const stedSel = h('select', { id: 'f-sted', name: 'sted', onchange: () => { toggelSted(); konfliktCheck(); } },
-    h('option', { value: '' }, 'Vælg sted (valgfrit) …'), S.stam.steder.map((s) => h('option', { value: s.id, selected: e0.sted_id === s.id }, s.navn)), h('option', { value: '__andet', selected: !!e0.sted_navn && !e0.sted_id }, 'Andet sted …'));
-  const stedNavn = inp('stednavn', 'text', { value: e0.sted_id ? '' : (e0.sted_navn || ''), maxlength: 120, placeholder: 'Fx "Hos Hansen, Skovvej 3"', oninput: konfliktCheck });
-  const stedAdr = inp('adresse', 'text', { value: e0.sted_id ? '' : (e0.adresse || ''), maxlength: 200, placeholder: 'Adresse (valgfrit)' });
+    h('option', { value: '' }, 'Vælg sted fra listen (valgfrit) …'), S.stam.steder.map((s) => h('option', { value: s.id, selected: e0.sted_id === s.id }, s.navn)), h('option', { value: '__andet', selected: !!e0.sted_navn && !e0.sted_id }, 'Skriv et andet sted …'));
+  const stedNavn = inp('stednavn', 'text', { value: e0.sted_id ? '' : (e0.sted_navn || ''), maxlength: 120, placeholder: 'Fx "Forsamlingshuset" eller "Hos Hansen"', oninput: konfliktCheck });
+  const stedAdr = inp('adresse', 'text', { value: e0.sted_id ? '' : (e0.adresse || ''), maxlength: 200, placeholder: 'Fx "Skovvej 3, 8963 Auning"' });
   const andetBox = h('div', { class: 'andet-sted', hidden: harSted }, felt('Stedets navn', stedNavn, { navn: 'stednavn' }), felt('Adresse', stedAdr, { navn: 'adresse' }));
   function toggelSted() { andetBox.hidden = stedSel.value !== '__andet'; }
 
@@ -155,7 +155,7 @@ export async function visForm(root, { id, kopi, token } = {}) {
           h('small', { class: 'hint' }, 'Markér kun, hvis arrangementet ikke har et fast sluttidspunkt.'))),
       gentagBox),
     sektion(3, 'Hvor?',
-      h('div', { class: 'række' }, felt('Område', omrSel, { navn: 'omraade' }), felt('Sted (valgfrit)', stedSel, { navn: 'sted', hint: 'Du kan lade det stå tomt og tilføje stedet senere.' })), andetBox, konfBox),
+      h('div', { class: 'række' }, felt('Område', omrSel, { navn: 'omraade' }), felt('Sted (valgfrit)', stedSel, { navn: 'sted', hint: 'Vælg et sted fra listen. Er stedet ikke på listen, vælg “Skriv et andet sted …” og indtast navn og evt. adresse.' })), andetBox, konfBox),
     sektion(4, 'Detaljer',
       h('div', { class: 'række' }, felt('Målgruppe', mgSel, { navn: 'maalgruppe', krav: true }), felt('Pris', prisRække, { navn: 'pris' })),
       felt('Arrangør', inp('arrangoer', 'text', { value: e0.arrangoer || '', maxlength: 120, placeholder: 'Forening, virksomhed eller navn' }), { navn: 'arrangoer', krav: true }),

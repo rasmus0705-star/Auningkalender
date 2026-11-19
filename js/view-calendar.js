@@ -10,7 +10,16 @@ export async function visKalender(root) {
   const [iy, im] = idag.split('-').map(Number);
   S.kal = S.kal || { y: iy, m: im, valgt: idag };
 
-  const filtre = h('div', { class: 'filterbar kompakt-filter' }, kategoriChips(tegn));
+  const filtre = h('div', { class: 'filterbar kompakt-filter' });
+  const ryd = h('button', { type: 'button', class: 'knap sekundær lille-knap', hidden: true, onclick: () => {
+    S.filter = { periode: 'alle', kat: new Set(), maalgruppe: '', omraade: '', gratis: false, mine: false, q: '' };
+    tegnFilter(); tegn();
+  } }, 'Ryd filtre');
+  const tegnFilter = () => {
+    ryd.hidden = !(S.filter.kat.size || S.filter.periode !== 'alle' || S.filter.maalgruppe || S.filter.omraade || S.filter.gratis || S.filter.mine || S.filter.q.trim());
+    filtre.replaceChildren(kategoriChips(() => { tegnFilter(); tegn(); }), ryd);
+  };
+  tegnFilter();
   const hoved = h('div', { class: 'kal-hoved' });
   const gitter = h('div', { class: 'kal-gitter', role: 'grid' });
   const dagListe = h('div', { class: 'kal-dagliste' });
