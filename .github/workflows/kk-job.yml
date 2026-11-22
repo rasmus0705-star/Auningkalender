@@ -1,6 +1,9 @@
 name: Kulturkalender-job (søgbare sider, notifikationer, hold Supabase vågen)
 
 on:
+  push:
+    paths:
+      - '.github/workflows/kk-job.yml'
   schedule:
     - cron: '17 * * * *'      # hver time
   workflow_dispatch:           # kan køres manuelt under Actions → Run workflow
