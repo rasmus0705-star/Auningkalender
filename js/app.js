@@ -4,6 +4,7 @@ import { h, icon, clear, toast } from './util.js';
 import { S, indlaesStamdata, opdaterRolle } from './state.js';
 import { visHjem } from './view-home.js';
 import { visKalender } from './view-calendar.js';
+import { visMine } from './view-mine.js';
 import { visEvent } from './view-event.js';
 import { visForm } from './view-form.js';
 import { visMod } from './view-mod.js';
@@ -13,6 +14,7 @@ import { klokkeKnap, opfrisk as opfriskPush } from './push.js';
 const RUTER = [
   [/^#?\/?$/, (r) => visHjem(r), 'hjem'],
   [/^#\/kalender$/, (r) => visKalender(r), 'kalender'],
+  [/^#\/mine$/, (r) => visMine(r), 'mine'],
   [/^#\/event\/([^/]+)$/, (r, m) => visEvent(r, m[1]), 'hjem'],
   [/^#\/opret$/, (r) => visForm(r, {}), 'opret'],
   [/^#\/ret\/([^/]+)$/, (r, m) => visForm(r, { id: m[1] }), 'mod'],
@@ -21,7 +23,7 @@ const RUTER = [
   [/^#\/mod$/, (r) => visMod(r), 'mod'],
   [/^#\/(om|regler|privatliv|ansvar)$/, (r, m) => visTekst(r, m[1]), 'om'],
 ];
-const TITLER = { hjem: 'Arrangementer', kalender: 'Kalender', opret: 'Opret arrangement', mod: 'Moderator', om: 'Om' };
+const TITLER = { hjem: 'Arrangementer', kalender: 'Kalender', mine: 'Mine arrangementer', opret: 'Opret arrangement', mod: 'Moderator', om: 'Om' };
 
 let main, nav, tabbar, installBox;
 let deferredInstall = null;
@@ -141,7 +143,7 @@ function bygLayout(app) {
 
 function tegnNav(aktiv = S.aktivRute) {
   if (!nav) return;
-  const punkter = [['hjem', '#/', 'list', 'Arrangementer'], ['kalender', '#/kalender', 'cal', 'Kalender'], ['opret', '#/opret', 'plus', 'Opret'], ['om', '#/om', 'info', 'Om']];
+  const punkter = [['hjem', '#/', 'list', 'Arrangementer'], ['kalender', '#/kalender', 'cal', 'Kalender'], ['mine', '#/mine', 'star', 'Mine'], ['opret', '#/opret', 'plus', 'Opret'], ['om', '#/om', 'info', 'Om']];
   if (S.rolle) punkter.push(['mod', '#/mod', 'lock', 'Moderator']);
   clear(nav).append(...punkter.map(([k, href, ik, t]) => h('a', { href, class: (k === aktiv ? 'på ' : '') + (k === 'opret' ? 'nav-opret' : ''), 'aria-current': k === aktiv ? 'page' : null }, t)));
   clear(tabbar).append(...punkter.map(([k, href, ik, t]) => h('a', { href, class: (k === aktiv ? 'på ' : '') + (k === 'opret' ? 'tab-opret' : ''), 'aria-current': k === aktiv ? 'page' : null }, icon(ik, k === 'opret' ? 26 : 22), h('span', null, t))));

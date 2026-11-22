@@ -54,6 +54,7 @@ main { min-height: 62vh; outline: none; }
 .indlæser { padding: 4rem 1rem; text-align: center; color: var(--ink2); }
 .tabbar { position: fixed; inset: auto 0 0 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); background: color-mix(in srgb, var(--surf) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
 .tabbar:has(a:nth-child(5)) { grid-template-columns: repeat(5, 1fr); }
+.tabbar:has(a:nth-child(6)) { grid-template-columns: repeat(6, 1fr); }
 .tabbar a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: .55rem 0 .5rem; text-decoration: none; color: var(--ink2); font-size: .7rem; font-weight: 650; }
 .tabbar a.på { color: var(--accent); }
 .tabbar a.tab-opret .ikon { background: var(--accent); color: #fff; border-radius: 50%; padding: 6px; margin-top: -14px; box-shadow: 0 4px 12px rgba(0, 0, 0, .25); }
@@ -154,7 +155,7 @@ textarea { resize: vertical; }
 .datobadge i { font-style: normal; font-size: .66rem; text-transform: uppercase; font-weight: 750; letter-spacing: .05em; color: var(--c); }
 .fav { position: absolute; right: 8px; top: 8px; z-index: 3; width: 36px; height: 36px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--surf) 88%, transparent); color: var(--ink2); display: grid; place-items: center; cursor: pointer; }
 .fav[aria-pressed=true] { color: #f4b400; }
-.aflyst-bånd { position: absolute; z-index: 4; left: 0; right: 0; top: 50%; transform: translateY(-50%); background: var(--grøn); color: #fff; text-align: center; font-size: .85rem; font-weight: 850; letter-spacing: .16em; padding: .45rem .6rem; pointer-events: none; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); }
+.aflyst-bånd { position: absolute; z-index: 6; top: 46%; left: -12%; width: 124%; transform: rotate(-12deg); background: #e0002b; color: #fff; text-align: center; font-size: .88rem; font-weight: 900; letter-spacing: .18em; padding: .48rem .6rem; pointer-events: none; box-shadow: 0 3px 10px rgba(0, 0, 0, .4); text-shadow: 0 1px 1px rgba(0, 0, 0, .25); }
 .kort.aflyst h3, .kort.aflyst .kort-linje { text-decoration: line-through; opacity: .65; }
 @media (min-width: 640px) {
   .kort:not(.kompakt) { grid-template-columns: 1fr; }
